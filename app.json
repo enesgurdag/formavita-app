@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "NotesPlus",
+    "slug": "notesplus-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/brand/notesplus-app-icon-1024.png",
+    "scheme": "notesplus",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.notesplus.app",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Uygulamayı açmak için Face ID kullanılır.",
+        "UIBackgroundModes": ["remote-notification"]
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/brand/notesplus-app-icon-1024.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F4F1FF"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/brand/notesplus-app-icon-1024.png",
+          "color": "#6C3CF0"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Uygulamayı açmak için Face ID kullanılır."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "supportsSQLCipher": false,
+      "sqlCipherNote": "Gerçek danışan verisi öncesi development build ile SQLCipher tamamlanmalıdır."
+    }
+  }
+}
