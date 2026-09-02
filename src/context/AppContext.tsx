@@ -116,12 +116,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 
   const completeOnboarding = useCallback(async () => {
-    await markOnboardingComplete();
+    await markOnboardingComplete(dbRef.current);
     setOnboardingDone(true);
   }, []);
 
   const replayOnboarding = useCallback(async () => {
-    await resetOnboarding();
+    await resetOnboarding(dbRef.current);
     setOnboardingDone(false);
   }, []);
 
@@ -129,13 +129,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const [database, onboarded] = await Promise.all([
-          getDatabase(),
-          hasCompletedOnboarding(),
-        ]);
+        const database = await getDatabase();
+        if (cancelled) return;
+        dbRef.current = database;
+        const onboarded = await hasCompletedOnboarding(database);
         if (cancelled) return;
         setDb(database);
-        dbRef.current = database;
         setOnboardingDone(onboarded);
         const s = await getSettings(database);
         setSettings(s);

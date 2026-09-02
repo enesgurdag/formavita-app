@@ -183,4 +183,11 @@ CREATE INDEX IF NOT EXISTS idx_notification_inbox_fires ON notification_inbox(fi
 CREATE INDEX IF NOT EXISTS idx_notification_inbox_unread ON notification_inbox(delivered_at, read_at);
 `,
   },
+  {
+    version: 6,
+    name: 'onboarding_completed_flag',
+    sql: `
+ALTER TABLE settings ADD COLUMN onboarding_completed INTEGER NOT NULL DEFAULT 0;
+`,
+  },
 ];

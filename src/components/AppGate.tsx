@@ -2,9 +2,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { useApp } from '@/src/context/AppContext';
-import { LoadingScreen, ErrorScreen } from '@/src/components/ui/LoadingScreen';
+import { ErrorScreen } from '@/src/components/ui/LoadingScreen';
 import { Button } from '@/src/components/ui/Button';
 import { BrandLockup } from '@/src/components/brand/BrandMark';
 import { colors, spacing, typography } from '@/src/theme/tokens';
@@ -19,23 +20,37 @@ export function AppGate() {
     settings,
     unlock,
     onboardingDone,
+    onboardingTransitioning,
     completeOnboarding,
     setOnboardingTransitioning,
   } = useApp();
 
-  const [onboardingMounted, setOnboardingMounted] = useState(!onboardingDone);
-  const overlayOpacity = useSharedValue(onboardingDone ? 0 : 1);
-  const mainOpacity = useSharedValue(onboardingDone ? 1 : 0);
-  const mainTranslateY = useSharedValue(onboardingDone ? 0 : motion.appEnterSlidePx);
+  const [onboardingMounted, setOnboardingMounted] = useState(false);
+  const overlayOpacity = useSharedValue(0);
+  const mainOpacity = useSharedValue(0);
+  const mainTranslateY = useSharedValue(0);
 
   useEffect(() => {
-    if (!onboardingDone) {
-      setOnboardingMounted(true);
-      overlayOpacity.value = 1;
-      mainOpacity.value = 0;
-      mainTranslateY.value = motion.appEnterSlidePx;
+    if (!ready) return;
+    void SplashScreen.hideAsync();
+  }, [ready]);
+
+  useEffect(() => {
+    if (!ready || onboardingTransitioning) return;
+
+    if (onboardingDone) {
+      setOnboardingMounted(false);
+      overlayOpacity.value = 0;
+      mainOpacity.value = 1;
+      mainTranslateY.value = 0;
+      return;
     }
-  }, [onboardingDone, mainOpacity, mainTranslateY, overlayOpacity]);
+
+    setOnboardingMounted(true);
+    overlayOpacity.value = 1;
+    mainOpacity.value = 0;
+    mainTranslateY.value = motion.appEnterSlidePx;
+  }, [ready, onboardingDone, onboardingTransitioning, mainOpacity, mainTranslateY, overlayOpacity]);
 
   const handleCompleteOnboarding = useCallback(async () => {
     setOnboardingTransitioning(true);
@@ -78,7 +93,7 @@ export function AppGate() {
     transform: [{ translateY: mainTranslateY.value }],
   }));
 
-  if (!ready) return <LoadingScreen message="FormaVita hazırlanıyor…" />;
+  if (!ready) return null;
   if (error) return <ErrorScreen message={error} />;
 
   const showLock = onboardingDone && settings?.faceIdEnabled && !unlocked;
