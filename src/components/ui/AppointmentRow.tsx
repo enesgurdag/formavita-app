@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import type { AppointmentWithPerson } from '@/src/types/models';
+import { AnimatedPressable } from '@/src/components/ui/AnimatedPressable';
 import { Badge } from './Badge';
 import { colors, radius, shadows, spacing, typography } from '@/src/theme/tokens';
 import { appointmentEndTime } from '@/src/utils/date';
@@ -17,11 +18,12 @@ export function AppointmentRow({ appointment, onPress }: AppointmentRowProps) {
   const end = appointmentEndTime(appointment.startTime, appointment.durationMinutes);
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
+      intensity="card"
       accessibilityRole="button"
       accessibilityLabel={`${appointment.title} ${appointment.startTime}`}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={styles.row}
     >
       <View style={[styles.accent, { backgroundColor: accent }]} />
       <View style={styles.content}>
@@ -48,7 +50,7 @@ export function AppointmentRow({ appointment, onPress }: AppointmentRowProps) {
           />
         </View>
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -63,7 +65,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...shadows.soft,
   },
-  pressed: { opacity: 0.92, transform: [{ scale: 0.99 }] },
   accent: {
     width: 4,
   },

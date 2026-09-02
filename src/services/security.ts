@@ -37,8 +37,32 @@ export async function isBiometricAvailable(): Promise<boolean> {
   return hasHardware && enrolled;
 }
 
+/** Kullanıcıya gösterilecek kısa açıklama — simülatör / cihaz durumuna göre */
+export async function getBiometricSetupIssue(): Promise<string | null> {
+  const hasHardware = await LocalAuthentication.hasHardwareAsync();
+  if (!hasHardware) {
+    return 'Bu cihazda Face ID veya Touch ID donanımı yok.';
+  }
+  const enrolled = await LocalAuthentication.isEnrolledAsync();
+  if (!enrolled) {
+    return 'Face ID / Touch ID bu cihazda tanımlı değil. Ayarlar → Face ID ve Passcode bölümünden ekleyin.\n\nSimülatörde: Features → Face ID → Enrolled';
+  }
+  return null;
+}
+
+export async function biometricLabel(): Promise<string> {
+  const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
+  if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+    return 'Face ID';
+  }
+  if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+    return 'Touch ID';
+  }
+  return 'Biyometri';
+}
+
 export async function authenticateWithBiometrics(
-  prompt = 'NotesPlus kilidini açın',
+  prompt = 'FormaVita kilidini açın',
 ): Promise<boolean> {
   const result = await LocalAuthentication.authenticateAsync({
     promptMessage: prompt,

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import type { PersonListItem } from '@/src/types/models';
+import { AnimatedPressable } from '@/src/components/ui/AnimatedPressable';
 import { Badge } from './Badge';
 import { colors, radius, shadows, spacing, typography } from '@/src/theme/tokens';
 import { formatDateTimeTR } from '@/src/utils/date';
@@ -16,11 +17,12 @@ export function PersonRow({ person, onPress }: PersonRowProps) {
   const accent = tone === 'diet' ? colors.diet.main : colors.pilates.main;
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
+      intensity="card"
       accessibilityRole="button"
       accessibilityLabel={`${person.firstName} ${person.lastName}`}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={styles.row}
     >
       <View style={[styles.accent, { backgroundColor: accent }]} />
       <View style={styles.content}>
@@ -49,7 +51,7 @@ export function PersonRow({ person, onPress }: PersonRowProps) {
           </View>
         ) : null}
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -64,7 +66,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...shadows.soft,
   },
-  pressed: { opacity: 0.92, transform: [{ scale: 0.99 }] },
   accent: {
     width: 4,
   },

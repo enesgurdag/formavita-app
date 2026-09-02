@@ -13,6 +13,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
+import { AnimatedPressable } from '@/src/components/ui/AnimatedPressable';
 import { Button } from '@/src/components/ui/Button';
 import { colors, radius, spacing, touchTarget, typography } from '@/src/theme/tokens';
 import {
@@ -80,21 +81,18 @@ export function DateField({
   return (
     <View style={[styles.wrap, containerStyle]}>
       <Text style={styles.label}>{label}</Text>
-      <Pressable
+      <AnimatedPressable
         accessibilityRole="button"
         accessibilityLabel={label}
         onPress={openPicker}
-        style={({ pressed }) => [
-          styles.field,
-          error ? styles.fieldError : null,
-          pressed && styles.fieldPressed,
-        ]}
+        intensity="card"
+        style={[styles.field, error ? styles.fieldError : null]}
       >
         <Text style={[styles.value, !value && styles.placeholder]}>
           {value || placeholder}
         </Text>
         <Text style={styles.chevron}>Takvim</Text>
-      </Pressable>
+      </AnimatedPressable>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {Platform.OS === 'android' && open ? (
@@ -110,7 +108,7 @@ export function DateField({
       ) : null}
 
       {Platform.OS === 'ios' ? (
-        <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
+        <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
           <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHeader}>
@@ -163,9 +161,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
-  },
-  fieldPressed: {
-    opacity: 0.92,
   },
   fieldError: {
     borderColor: colors.danger.main,

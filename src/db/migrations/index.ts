@@ -155,4 +155,32 @@ UPDATE settings SET default_pilates_appointment_minutes = default_appointment_mi
 UPDATE settings SET default_diet_appointment_minutes = 30;
 `,
   },
+  {
+    version: 4,
+    name: 'appointment_group_id',
+    sql: `
+ALTER TABLE appointments ADD COLUMN group_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_appointments_group ON appointments(group_id);
+`,
+  },
+  {
+    version: 5,
+    name: 'notification_inbox',
+    sql: `
+CREATE TABLE IF NOT EXISTS notification_inbox (
+  id TEXT PRIMARY KEY NOT NULL,
+  appointment_id TEXT REFERENCES appointments(id),
+  expo_notification_id TEXT,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  fires_at TEXT NOT NULL,
+  delivered_at TEXT,
+  read_at TEXT,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_notification_inbox_fires ON notification_inbox(fires_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notification_inbox_unread ON notification_inbox(delivered_at, read_at);
+`,
+  },
 ];

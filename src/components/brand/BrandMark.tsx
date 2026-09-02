@@ -8,10 +8,10 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { colors, spacing, typography } from '@/src/theme/tokens';
+import { colors, radius, shadows, spacing, typography } from '@/src/theme/tokens';
 
-const iconSource = require('@/assets/brand/notesplus-app-icon-1024.png');
-const wordmarkSource = require('@/assets/brand/notesplus-wordmark.png');
+const iconSource = require('@/assets/formavita/brand/formavita-app-icon-1024.png');
+const wordmarkSource = require('@/assets/formavita/brand/formavita-wordmark-transparent.png');
 
 type Size = 'sm' | 'md' | 'lg' | 'hero';
 
@@ -33,7 +33,7 @@ export function BrandIcon({ size = 'md', style }: BrandIconProps) {
   return (
     <Image
       source={iconSource}
-      accessibilityLabel="NotesPlus ikonu"
+      accessibilityLabel="FormaVita ikonu"
       style={[{ width: dim, height: dim, borderRadius: dim * 0.2237 }, style]}
       resizeMode="cover"
     />
@@ -45,17 +45,40 @@ interface BrandWordmarkProps {
   style?: StyleProp<ImageStyle>;
 }
 
-/** Yatay kelime işareti — Notes (lacivert) + Plus (mor) */
+/** Yatay kelime işareti — Forma (lacivert) + Vita (mor) */
 export function BrandWordmark({ width = 200, style }: BrandWordmarkProps) {
-  // Kaynak yaklaşık 3.2:1 oranında
-  const height = Math.round(width / 3.2);
+  const height = Math.round(width / 3);
   return (
     <Image
       source={wordmarkSource}
-      accessibilityLabel="NotesPlus"
+      accessibilityLabel="FormaVita"
       style={[{ width, height }, style]}
       resizeMode="contain"
     />
+  );
+}
+
+interface BrandHorizontalLogoProps {
+  width?: number;
+  style?: StyleProp<ImageStyle>;
+}
+
+/** Sembol + wordmark yatay kilit — gömülü zemin yerine marka yüzeyi */
+export function BrandHorizontalLogo({ width = 180, style }: BrandHorizontalLogoProps) {
+  const iconDim = Math.round(width * 0.22);
+  return (
+    <View style={[styles.horizontalChip, { width }, style]}>
+      <Image
+        source={iconSource}
+        accessibilityLabel="FormaVita ikonu"
+        style={{ width: iconDim, height: iconDim, borderRadius: iconDim * 0.2237 }}
+        resizeMode="cover"
+      />
+      <Text style={styles.horizontalName} accessibilityLabel="FormaVita">
+        <Text style={styles.forma}>Forma</Text>
+        <Text style={styles.vita}>Vita</Text>
+      </Text>
+    </View>
   );
 }
 
@@ -82,8 +105,8 @@ export function BrandLockup({
         <BrandWordmark width={wordmarkWidth} style={styles.wordmark} />
       ) : (
         <Text style={styles.fallbackName}>
-          <Text style={styles.notes}>Notes</Text>
-          <Text style={styles.plus}>Plus</Text>
+          <Text style={styles.forma}>Forma</Text>
+          <Text style={styles.vita}>Vita</Text>
         </Text>
       )}
       {caption ? <Text style={styles.caption}>{caption}</Text> : null}
@@ -95,8 +118,7 @@ export function BrandLockup({
 export function BrandHeaderRow({ style }: { style?: StyleProp<ViewStyle> }) {
   return (
     <View style={[styles.row, style]} accessibilityRole="header">
-      <BrandIcon size="sm" />
-      <BrandWordmark width={148} />
+      <BrandHorizontalLogo width={168} />
     </View>
   );
 }
@@ -112,10 +134,10 @@ const styles = StyleSheet.create({
     ...typography.title,
     marginTop: spacing.sm,
   },
-  notes: {
+  forma: {
     color: colors.brand.midnight,
   },
-  plus: {
+  vita: {
     color: colors.brand.violet,
   },
   caption: {
@@ -128,6 +150,23 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  horizontalChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
+    backgroundColor: colors.brand.paper,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xxs,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.soft,
+  },
+  horizontalName: {
+    ...typography.heading,
+    fontSize: 20,
+    lineHeight: 24,
+    letterSpacing: -0.3,
   },
 });

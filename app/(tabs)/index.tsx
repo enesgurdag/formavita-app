@@ -4,11 +4,11 @@ import { router, useFocusEffect } from 'expo-router';
 import { Screen } from '@/src/components/ui/Screen';
 import { Card } from '@/src/components/ui/Card';
 import { Button } from '@/src/components/ui/Button';
-import { AppointmentRow } from '@/src/components/ui/AppointmentRow';
+import { CalendarAppointmentList } from '@/src/components/ui/CalendarAppointmentList';
 import { EmptyState } from '@/src/components/ui/EmptyState';
-import { LoadingScreen } from '@/src/components/ui/LoadingScreen';
 import { useApp } from '@/src/context/AppContext';
 import { BrandHeaderRow } from '@/src/components/brand/BrandMark';
+import { NotificationBellButton } from '@/src/components/ui/NotificationBellButton';
 import { colors, radius as radii, spacing, typography } from '@/src/theme/tokens';
 import { formatWeekdayDateTR, greetingForHour, toDateOnly } from '@/src/utils/date';
 import { countActivePeople } from '@/src/repositories/peopleRepository';
@@ -20,8 +20,7 @@ import {
 import type { AppointmentWithPerson } from '@/src/types/models';
 
 export default function HomeScreen() {
-  const { db, reloadKey } = useApp();
-  const [loading, setLoading] = useState(true);
+  const { db, reloadKey, unreadNotificationCount, refreshNotificationInbox } = useApp();
   const [dietActive, setDietActive] = useState(0);
   const [pilatesActive, setPilatesActive] = useState(0);
   const [dietToday, setDietToday] = useState(0);
@@ -36,42 +35,40 @@ export default function HomeScreen() {
   const load = useCallback(async () => {
     if (!db) return;
     const day = toDateOnly(new Date());
-    setLoading(true);
-    try {
-      const [dA, pA, dT, pT, dE, pL, appts] = await Promise.all([
-        countActivePeople(db, 'diet'),
-        countActivePeople(db, 'pilates'),
-        countAppointmentsForDate(db, day, 'diet'),
-        countAppointmentsForDate(db, day, 'pilates'),
-        countActivePackagesWithLowSessions(db, 'diet'),
-        countActivePackagesWithLowSessions(db, 'pilates'),
-        listAppointmentsForDate(db, day),
-      ]);
-      setDietActive(dA);
-      setPilatesActive(pA);
-      setDietToday(dT);
-      setPilatesToday(pT);
-      setDietExpiring(dE);
-      setPilatesLow(pL);
-      setTodayAppts(appts);
-    } finally {
-      setLoading(false);
-    }
+    const [dA, pA, dT, pT, dE, pL, appts] = await Promise.all([
+      countActivePeople(db, 'diet'),
+      countActivePeople(db, 'pilates'),
+      countAppointmentsForDate(db, day, 'diet'),
+      countAppointmentsForDate(db, day, 'pilates'),
+      countActivePackagesWithLowSessions(db, 'diet'),
+      countActivePackagesWithLowSessions(db, 'pilates'),
+      listAppointmentsForDate(db, day),
+    ]);
+    setDietActive(dA);
+    setPilatesActive(pA);
+    setDietToday(dT);
+    setPilatesToday(pT);
+    setDietExpiring(dE);
+    setPilatesLow(pL);
+    setTodayAppts(appts);
   }, [db, reloadKey]);
 
   useFocusEffect(
     useCallback(() => {
       void load();
-    }, [load]),
+      void refreshNotificationInbox();
+    }, [load, refreshNotificationInbox]),
   );
-
-  if (loading && !todayAppts.length && dietActive === 0 && pilatesActive === 0) {
-    return <LoadingScreen />;
-  }
 
   return (
     <Screen>
-      <BrandHeaderRow style={styles.brand} />
+      <View style={styles.topRow}>
+        <BrandHeaderRow style={styles.brand} />
+        <NotificationBellButton
+          count={unreadNotificationCount}
+          onPress={() => router.push('/notifications')}
+        />
+      </View>
       <Text style={styles.date}>{formatWeekdayDateTR(today)}</Text>
       <Text style={styles.greeting}>{greeting}</Text>
       <Text style={styles.sub}>Danışan, Üye Ve Programın Özeti</Text>
@@ -138,15 +135,7 @@ export default function HomeScreen() {
           }
         />
       ) : (
-        todayAppts.map((a) => (
-          <AppointmentRow
-            key={a.id}
-            appointment={a}
-            onPress={() =>
-              router.push({ pathname: '/appointments/form', params: { id: a.id } })
-            }
-          />
-        ))
+        <CalendarAppointmentList appointments={todayAppts} />
       )}
     </Screen>
   );
@@ -162,8 +151,15 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  brand: {
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: spacing.md,
+  },
+  brand: {
+    flex: 1,
+    marginBottom: 0,
   },
   date: {
     ...typography.captionMedium,

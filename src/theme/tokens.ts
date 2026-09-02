@@ -1,5 +1,5 @@
 /**
- * NotesPlus marka rehberi — Midnight Indigo, Violet, Warm Paper, Soft Lilac
+ * FormaVita marka rehberi — Midnight Indigo, Violet, Warm Paper, Soft Lilac
  */
 import { Platform, TextStyle } from 'react-native';
 

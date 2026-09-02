@@ -1,6 +1,9 @@
 import { migrations } from '@/src/db/migrations';
 
-export const BACKUP_FORMAT = 'notesplus-backup' as const;
+export const BACKUP_FORMAT = 'formavita-backup' as const;
+export const LEGACY_BACKUP_FORMAT = 'notesplus-backup' as const;
+
+const ACCEPTED_BACKUP_FORMATS = [BACKUP_FORMAT, LEGACY_BACKUP_FORMAT] as const;
 export const CURRENT_SCHEMA_VERSION = migrations[migrations.length - 1]?.version ?? 1;
 
 export interface BackupFile {
@@ -25,8 +28,8 @@ export function validateBackup(
     return { ok: false, error: 'Yedek dosyası okunamadı.' };
   }
   const obj = raw as Record<string, unknown>;
-  if (obj.format !== BACKUP_FORMAT) {
-    return { ok: false, error: 'Bu dosya NotesPlus yedeği değil.' };
+  if (!ACCEPTED_BACKUP_FORMATS.includes(obj.format as (typeof ACCEPTED_BACKUP_FORMATS)[number])) {
+    return { ok: false, error: 'Bu dosya FormaVita yedeği değil.' };
   }
   if (typeof obj.schemaVersion !== 'number') {
     return { ok: false, error: 'Yedek şema sürümü eksik.' };

@@ -11,6 +11,7 @@ type AppointmentRow = {
   id: string;
   person_id: string;
   package_id: string | null;
+  group_id: string | null;
   service_type: ServiceType;
   title: string;
   date: string;
@@ -33,6 +34,7 @@ function mapAppointment(row: AppointmentRow): Appointment {
     id: row.id,
     personId: row.person_id,
     packageId: row.package_id,
+    groupId: row.group_id,
     serviceType: row.service_type,
     title: row.title,
     date: row.date,
@@ -115,6 +117,25 @@ export async function listAppointmentsForPerson(
   return rows.map(mapAppointment);
 }
 
+export async function listAppointmentsByGroupId(
+  db: SQLiteDatabase,
+  groupId: string,
+): Promise<AppointmentWithPerson[]> {
+  const rows = await db.getAllAsync<AppointmentRow>(
+    `SELECT a.*, p.first_name as person_first_name, p.last_name as person_last_name
+     FROM appointments a
+     JOIN people p ON p.id = a.person_id
+     WHERE a.deleted_at IS NULL AND a.group_id = ?
+     ORDER BY p.last_name ASC, p.first_name ASC`,
+    groupId,
+  );
+  return rows.map((row) => ({
+    ...mapAppointment(row),
+    personFirstName: row.person_first_name ?? '',
+    personLastName: row.person_last_name ?? '',
+  }));
+}
+
 export async function getAppointmentById(
   db: SQLiteDatabase,
   id: string,
@@ -159,13 +180,14 @@ export async function findOverlappingAppointments(
 export async function insertAppointment(db: SQLiteDatabase, appt: Appointment): Promise<void> {
   await db.runAsync(
     `INSERT INTO appointments (
-      id, person_id, package_id, service_type, title, date, start_time,
+      id, person_id, package_id, group_id, service_type, title, date, start_time,
       duration_minutes, note, status, counts_against_quota,
       reminder_minutes_before, notification_id, created_at, updated_at, deleted_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
     appt.id,
     appt.personId,
     appt.packageId,
+    appt.groupId,
     appt.serviceType,
     appt.title,
     appt.date,
@@ -193,6 +215,7 @@ export async function updateAppointment(
   const map: Record<string, string> = {
     personId: 'person_id',
     packageId: 'package_id',
+    groupId: 'group_id',
     serviceType: 'service_type',
     title: 'title',
     date: 'date',
@@ -249,6 +272,17 @@ export async function softDeleteAppointment(
   }
 }
 
+export async function softDeleteAppointmentGroup(
+  db: SQLiteDatabase,
+  groupId: string,
+  deletedAt: string,
+): Promise<void> {
+  const members = await listAppointmentsByGroupId(db, groupId);
+  for (const member of members) {
+    await softDeleteAppointment(db, member.id, deletedAt);
+  }
+}
+
 export async function countAppointmentsForDate(
   db: SQLiteDatabase,
   date: string,
@@ -262,4 +296,24 @@ export async function countAppointmentsForDate(
     serviceType,
   );
   return row?.c ?? 0;
+}
+
+/** Hatırlatması açık, planlanmış gelecek randevular */
+export async function listPlannedAppointmentsWithReminders(
+  db: SQLiteDatabase,
+): Promise<AppointmentWithPerson[]> {
+  const rows = await db.getAllAsync<AppointmentRow>(
+    `SELECT a.*, p.first_name as person_first_name, p.last_name as person_last_name
+     FROM appointments a
+     JOIN people p ON p.id = a.person_id
+     WHERE a.deleted_at IS NULL
+       AND a.status = 'planned'
+       AND a.reminder_minutes_before IS NOT NULL
+     ORDER BY a.date ASC, a.start_time ASC`,
+  );
+  return rows.map((row) => ({
+    ...mapAppointment(row),
+    personFirstName: row.person_first_name ?? '',
+    personLastName: row.person_last_name ?? '',
+  }));
 }

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { AnimatedPressable } from '@/src/components/ui/AnimatedPressable';
 import { colors, radius, shadows, spacing } from '@/src/theme/tokens';
 
 interface CardProps {
@@ -12,18 +13,15 @@ interface CardProps {
 export function Card({ children, style, onPress, accessibilityLabel }: CardProps) {
   if (onPress) {
     return (
-      <Pressable
+      <AnimatedPressable
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         onPress={onPress}
-        style={({ pressed }) => [
-          styles.card,
-          pressed && styles.pressed,
-          style,
-        ]}
+        intensity="card"
+        style={[styles.card, style]}
       >
         {children}
-      </Pressable>
+      </AnimatedPressable>
     );
   }
   return <View style={[styles.card, style]}>{children}</View>;
@@ -37,9 +35,5 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
     ...shadows.card,
-  },
-  pressed: {
-    opacity: 0.94,
-    transform: [{ scale: 0.99 }],
   },
 });

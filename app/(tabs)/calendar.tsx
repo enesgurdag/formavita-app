@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import { AnimatedPressable } from '@/src/components/ui/AnimatedPressable';
 import {
   addMonths,
   eachDayOfInterval,
@@ -15,7 +16,7 @@ import {
 import { tr } from 'date-fns/locale';
 import { Screen } from '@/src/components/ui/Screen';
 import { Button } from '@/src/components/ui/Button';
-import { AppointmentRow } from '@/src/components/ui/AppointmentRow';
+import { CalendarAppointmentList } from '@/src/components/ui/CalendarAppointmentList';
 import { EmptyState } from '@/src/components/ui/EmptyState';
 import { Badge } from '@/src/components/ui/Badge';
 import { useApp } from '@/src/context/AppContext';
@@ -111,7 +112,7 @@ export default function CalendarScreen() {
           ['diet', 'Diyet'],
           ['pilates', 'Pilates'],
         ] as const).map(([key, label]) => (
-          <Pressable
+          <AnimatedPressable
             key={key}
             onPress={() => setFilter(key)}
             style={[styles.chip, filter === key && styles.chipActive]}
@@ -119,30 +120,30 @@ export default function CalendarScreen() {
             accessibilityState={{ selected: filter === key }}
           >
             <Text style={[styles.chipText, filter === key && styles.chipTextActive]}>{label}</Text>
-          </Pressable>
+          </AnimatedPressable>
         ))}
       </View>
 
       <View style={styles.monthHeader}>
-        <Pressable
+        <AnimatedPressable
           onPress={() => setCursor((d) => addMonths(d, -1))}
           hitSlop={8}
           style={styles.navBtn}
           accessibilityLabel="Önceki Ay"
         >
           <Text style={styles.navText}>‹</Text>
-        </Pressable>
+        </AnimatedPressable>
         <Text style={styles.monthTitle}>
           {toTitleCaseTR(format(cursor, 'MMMM yyyy', { locale: tr }))}
         </Text>
-        <Pressable
+        <AnimatedPressable
           onPress={() => setCursor((d) => addMonths(d, 1))}
           hitSlop={8}
           style={styles.navBtn}
           accessibilityLabel="Sonraki Ay"
         >
           <Text style={styles.navText}>›</Text>
-        </Pressable>
+        </AnimatedPressable>
       </View>
 
       <View style={styles.weekRow}>
@@ -161,8 +162,9 @@ export default function CalendarScreen() {
           const isToday = isSameDay(day, new Date());
           const mark = dayMarks.get(key);
           return (
-            <Pressable
+            <AnimatedPressable
               key={key}
+              intensity="card"
               onPress={() => setSelected(day)}
               style={[
                 styles.dayCell,
@@ -191,7 +193,7 @@ export default function CalendarScreen() {
               ) : (
                 <View style={styles.dotPlaceholder} />
               )}
-            </Pressable>
+            </AnimatedPressable>
           );
         })}
       </View>
@@ -223,15 +225,7 @@ export default function CalendarScreen() {
           onAction={openNewAppointment}
         />
       ) : (
-        dayAppts.map((a) => (
-          <AppointmentRow
-            key={a.id}
-            appointment={a}
-            onPress={() =>
-              router.push({ pathname: '/appointments/form', params: { id: a.id } })
-            }
-          />
-        ))
+        <CalendarAppointmentList appointments={dayAppts} />
       )}
     </Screen>
   );

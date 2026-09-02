@@ -19,6 +19,10 @@ import { migrations } from '../src/db/migrations';
 import { greetingForHour, toTitleCaseTR, formatDateTR, parseDateInputTR } from '../src/utils/date';
 import { remainingToSettle } from '../src/utils/packageSettle';
 import {
+  formatGroupParticipantNames,
+  groupCalendarAppointments,
+} from '../src/utils/appointmentGroups';
+import {
   MAX_PACKAGE_OVERPAYMENT_CENTS,
   allocateRecognizedPayments,
   availablePersonCreditCents,
@@ -30,8 +34,14 @@ import {
 describe('metin biçimi', () => {
   test('karşılama başlık düzeni', () => {
     expect(greetingForHour(9)).toBe('Günaydın');
-    expect(greetingForHour(14)).toBe('İyi Günler');
+    expect(greetingForHour(11)).toBe('Günaydın');
+    expect(greetingForHour(12)).toBe('Tünaydın');
+    expect(greetingForHour(14)).toBe('Tünaydın');
+    expect(greetingForHour(17)).toBe('Tünaydın');
+    expect(greetingForHour(18)).toBe('İyi Akşamlar');
     expect(greetingForHour(20)).toBe('İyi Akşamlar');
+    expect(greetingForHour(22)).toBe('İyi Geceler');
+    expect(greetingForHour(2)).toBe('İyi Geceler');
   });
 
   test('Türkçe title case', () => {
@@ -188,6 +198,190 @@ describe('yedek doğrulama', () => {
   test('geçersiz format', () => {
     const result = validateBackup({ format: 'other' });
     expect(result.ok).toBe(false);
+  });
+
+  test('eski NotesPlus yedeği kabul edilir', () => {
+    const result = validateBackup({
+      format: 'notesplus-backup',
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+      exportedAt: new Date().toISOString(),
+      appVersion: '1.0.0',
+      data: {
+        people: [],
+        packages: [],
+        payments: [],
+        appointments: [],
+        notes: [],
+        settings: [],
+      },
+    });
+    expect(result.ok).toBe(true);
+  });
+});
+
+describe('grup dersi', () => {
+  test('aynı groupId tek satırda birleşir', () => {
+    const appts = groupCalendarAppointments([
+      {
+        id: '1',
+        personId: 'a',
+        groupId: 'g1',
+        serviceType: 'pilates',
+        title: 'Grup dersi',
+        date: '2026-09-03',
+        startTime: '10:00',
+        durationMinutes: 60,
+        note: null,
+        status: 'planned',
+        countsAgainstQuota: true,
+        reminderMinutesBefore: null,
+        notificationId: null,
+        packageId: null,
+        createdAt: '',
+        updatedAt: '',
+        deletedAt: null,
+        personFirstName: 'Ayşe',
+        personLastName: 'Yılmaz',
+      },
+      {
+        id: '2',
+        personId: 'b',
+        groupId: 'g1',
+        serviceType: 'pilates',
+        title: 'Grup dersi',
+        date: '2026-09-03',
+        startTime: '10:00',
+        durationMinutes: 60,
+        note: null,
+        status: 'planned',
+        countsAgainstQuota: true,
+        reminderMinutesBefore: null,
+        notificationId: null,
+        packageId: null,
+        createdAt: '',
+        updatedAt: '',
+        deletedAt: null,
+        personFirstName: 'Mehmet',
+        personLastName: 'Kaya',
+      },
+      {
+        id: '3',
+        personId: 'c',
+        groupId: null,
+        serviceType: 'diet',
+        title: 'Kontrol',
+        date: '2026-09-03',
+        startTime: '11:00',
+        durationMinutes: 30,
+        note: null,
+        status: 'planned',
+        countsAgainstQuota: true,
+        reminderMinutesBefore: null,
+        notificationId: null,
+        packageId: null,
+        createdAt: '',
+        updatedAt: '',
+        deletedAt: null,
+        personFirstName: 'Can',
+        personLastName: 'Demir',
+      },
+    ]);
+    expect(appts).toHaveLength(2);
+    expect(appts[0]?.kind).toBe('group');
+    expect(appts[1]?.kind).toBe('single');
+    if (appts[0]?.kind === 'group') {
+      expect(appts[0].appointments).toHaveLength(2);
+    }
+  });
+
+  test('katılımcı adları kısaltılır', () => {
+    const label = formatGroupParticipantNames([
+      {
+        id: '1',
+        personId: 'a',
+        groupId: 'g1',
+        serviceType: 'pilates',
+        title: 'Grup dersi',
+        date: '2026-09-03',
+        startTime: '10:00',
+        durationMinutes: 60,
+        note: null,
+        status: 'planned',
+        countsAgainstQuota: true,
+        reminderMinutesBefore: null,
+        notificationId: null,
+        packageId: null,
+        createdAt: '',
+        updatedAt: '',
+        deletedAt: null,
+        personFirstName: 'A',
+        personLastName: 'One',
+      },
+      {
+        id: '2',
+        personId: 'b',
+        groupId: 'g1',
+        serviceType: 'pilates',
+        title: 'Grup dersi',
+        date: '2026-09-03',
+        startTime: '10:00',
+        durationMinutes: 60,
+        note: null,
+        status: 'planned',
+        countsAgainstQuota: true,
+        reminderMinutesBefore: null,
+        notificationId: null,
+        packageId: null,
+        createdAt: '',
+        updatedAt: '',
+        deletedAt: null,
+        personFirstName: 'B',
+        personLastName: 'Two',
+      },
+      {
+        id: '3',
+        personId: 'c',
+        groupId: 'g1',
+        serviceType: 'pilates',
+        title: 'Grup dersi',
+        date: '2026-09-03',
+        startTime: '10:00',
+        durationMinutes: 60,
+        note: null,
+        status: 'planned',
+        countsAgainstQuota: true,
+        reminderMinutesBefore: null,
+        notificationId: null,
+        packageId: null,
+        createdAt: '',
+        updatedAt: '',
+        deletedAt: null,
+        personFirstName: 'C',
+        personLastName: 'Three',
+      },
+      {
+        id: '4',
+        personId: 'd',
+        groupId: 'g1',
+        serviceType: 'pilates',
+        title: 'Grup dersi',
+        date: '2026-09-03',
+        startTime: '10:00',
+        durationMinutes: 60,
+        note: null,
+        status: 'planned',
+        countsAgainstQuota: true,
+        reminderMinutesBefore: null,
+        notificationId: null,
+        packageId: null,
+        createdAt: '',
+        updatedAt: '',
+        deletedAt: null,
+        personFirstName: 'D',
+        personLastName: 'Four',
+      },
+    ]);
+    expect(label).toContain('+1');
   });
 });
 

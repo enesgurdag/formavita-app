@@ -65,6 +65,8 @@ export interface Appointment {
   id: string;
   personId: string;
   packageId: string | null;
+  /** Pilates grup dersi — aynı groupId paylaşan kayıtlar tek ders sayılır */
+  groupId: string | null;
   serviceType: ServiceType;
   title: string;
   date: string;
@@ -116,6 +118,18 @@ export interface PersonListItem extends Person {
 export interface AppointmentWithPerson extends Appointment {
   personFirstName: string;
   personLastName: string;
+}
+
+export interface InboxNotification {
+  id: string;
+  appointmentId: string | null;
+  expoNotificationId: string | null;
+  title: string;
+  body: string;
+  firesAt: string;
+  deliveredAt: string | null;
+  readAt: string | null;
+  createdAt: string;
 }
 
 export interface PackageEarningsRow {

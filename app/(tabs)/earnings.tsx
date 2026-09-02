@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
+import { AnimatedPressable } from '@/src/components/ui/AnimatedPressable';
 import { addMonths, subMonths } from 'date-fns';
 import { Screen } from '@/src/components/ui/Screen';
 import { Card } from '@/src/components/ui/Card';
@@ -41,13 +42,13 @@ export default function EarningsScreen() {
   return (
     <Screen>
       <View style={styles.monthNav}>
-        <Pressable onPress={() => setMonth((m) => subMonths(m, 1))} hitSlop={8}>
+        <AnimatedPressable onPress={() => setMonth((m) => subMonths(m, 1))} hitSlop={8}>
           <Text style={styles.nav}>‹ Önceki</Text>
-        </Pressable>
+        </AnimatedPressable>
         <Text style={styles.month}>{formatMonthYearTR(toDateOnly(month))}</Text>
-        <Pressable onPress={() => setMonth((m) => addMonths(m, 1))} hitSlop={8}>
+        <AnimatedPressable onPress={() => setMonth((m) => addMonths(m, 1))} hitSlop={8}>
           <Text style={styles.nav}>Sonraki ›</Text>
-        </Pressable>
+        </AnimatedPressable>
       </View>
       <Text style={styles.rangeHint}>
         {formatDateTR(range.from)} — {formatDateTR(range.to)}

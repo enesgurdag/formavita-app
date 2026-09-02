@@ -1,13 +1,13 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   StyleSheet,
   Text,
   ViewStyle,
   StyleProp,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { AnimatedPressable } from '@/src/components/ui/AnimatedPressable';
 import { colors, radius, spacing, touchTarget, typography } from '@/src/theme/tokens';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'diet' | 'pilates';
@@ -53,7 +53,7 @@ export function Button({
   accessibilityLabel,
 }: ButtonProps) {
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
       disabled={disabled || loading}
@@ -61,13 +61,12 @@ export function Button({
         void Haptics.selectionAsync();
         onPress();
       }}
-      style={({ pressed }) => [
+      style={[
         styles.base,
         size === 'sm' && styles.sm,
         {
           backgroundColor: bg[variant],
-          opacity: disabled ? 0.4 : pressed ? 0.88 : 1,
-          transform: [{ scale: pressed && !disabled ? 0.98 : 1 }],
+          opacity: disabled ? 0.4 : 1,
         },
         variant === 'ghost' && styles.ghost,
         variant === 'secondary' && styles.secondary,
@@ -86,7 +85,7 @@ export function Button({
           {title}
         </Text>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

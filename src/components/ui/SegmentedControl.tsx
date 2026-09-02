@@ -1,6 +1,7 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { AnimatedPressable } from '@/src/components/ui/AnimatedPressable';
 import { colors, radius, spacing, touchTarget, typography } from '@/src/theme/tokens';
 
 interface SegmentedControlProps<T extends string> {
@@ -19,7 +20,7 @@ export function SegmentedControl<T extends string>({
       {options.map((opt) => {
         const selected = opt.value === value;
         return (
-          <Pressable
+          <AnimatedPressable
             key={opt.value}
             accessibilityRole="tab"
             accessibilityState={{ selected }}
@@ -30,7 +31,7 @@ export function SegmentedControl<T extends string>({
             style={[styles.item, selected && styles.itemOn]}
           >
             <Text style={[styles.label, selected && styles.labelOn]}>{opt.label}</Text>
-          </Pressable>
+          </AnimatedPressable>
         );
       })}
     </View>

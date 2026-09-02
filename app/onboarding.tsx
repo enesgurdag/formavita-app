@@ -32,12 +32,17 @@ const SLIDES = [
   {
     key: 'privacy',
     title: 'Verileriniz Yalnızca Bu iPhone’da',
-    body: 'NotesPlus internete bağlanmaz. Hesap yok, bulut yok — her şey cihazınızda kalır.',
+    body: 'FormaVita internete bağlanmaz. Hesap yok, bulut yok — her şey cihazınızda kalır.',
   },
 ] as const;
 
-export default function OnboardingScreen() {
+export default function OnboardingScreen({
+  onComplete,
+}: {
+  onComplete?: () => void | Promise<void>;
+}) {
   const { completeOnboarding } = useApp();
+  const finish = onComplete ?? completeOnboarding;
   const [index, setIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -53,11 +58,11 @@ export default function OnboardingScreen() {
       setIndex(index + 1);
       return;
     }
-    void completeOnboarding();
+    void finish();
   };
 
   const skip = () => {
-    void completeOnboarding();
+    void finish();
   };
 
   return (

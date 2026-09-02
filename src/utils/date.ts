@@ -155,8 +155,11 @@ export function dayBounds(date: Date): { start: Date; end: Date } {
   return { start: startOfDay(date), end: endOfDay(date) };
 }
 
+/** Saat dilimleri: sabah 05–11, öğleden sonra 12–17, akşam 18–21, gece 22–04 (yaygın uygulama standardı). */
 export function greetingForHour(hour: number): string {
-  if (hour < 12) return 'Günaydın';
-  if (hour < 18) return 'İyi Günler';
-  return 'İyi Akşamlar';
+  const h = ((hour % 24) + 24) % 24;
+  if (h >= 5 && h < 12) return 'Günaydın';
+  if (h >= 12 && h < 18) return 'Tünaydın';
+  if (h >= 18 && h < 22) return 'İyi Akşamlar';
+  return 'İyi Geceler';
 }

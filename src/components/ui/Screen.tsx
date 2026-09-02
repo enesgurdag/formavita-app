@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -9,6 +9,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FadeInView } from '@/src/components/ui/FadeInView';
+import { useApp } from '@/src/context/AppContext';
 import { colors, spacing } from '@/src/theme/tokens';
 
 interface ScreenProps {
@@ -19,6 +21,11 @@ interface ScreenProps {
 }
 
 export function Screen({ children, scroll = true, style, padded = true }: ScreenProps) {
+  const { onboardingTransitioning } = useApp();
+  // AppGate zaten giriş animasyonunu yapıyor; geçiş bitince FadeInView eklenmesin.
+  const skipFadeInRef = useRef(onboardingTransitioning);
+  const contentBody = skipFadeInRef.current ? children : <FadeInView>{children}</FadeInView>;
+
   const content = scroll ? (
     <KeyboardAvoidingView
       style={styles.flex}
@@ -29,11 +36,11 @@ export function Screen({ children, scroll = true, style, padded = true }: Screen
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {children}
+        {contentBody}
       </ScrollView>
     </KeyboardAvoidingView>
   ) : (
-    <View style={[styles.flex, padded && styles.pad, style]}>{children}</View>
+    <View style={[styles.flex, padded && styles.pad, style]}>{contentBody}</View>
   );
 
   return (

@@ -13,10 +13,10 @@ import { updateSettings } from '@/src/repositories/settingsRepository';
 import { assertRatesSum100, percentToBps, bpsToPercent } from '@/src/utils/earnings';
 import { exportBackup, pickBackupFile, restoreBackup } from '@/src/services/backup';
 import { seedDemoData } from '@/src/services/demoData';
-import { isBiometricAvailable, isSqlCipherConfigured } from '@/src/services/security';
+import { biometricLabel, isSqlCipherConfigured } from '@/src/services/security';
 
 export default function SettingsScreen() {
-  const { db, settings, refreshSettings, bumpReload, replayOnboarding } = useApp();
+  const { db, settings, refreshSettings, bumpReload, replayOnboarding, setFaceIdLock } = useApp();
   const [dietUser, setDietUser] = useState('60');
   const [pilatesUser, setPilatesUser] = useState('40');
   const [dietDuration, setDietDuration] = useState('30');
@@ -24,6 +24,8 @@ export default function SettingsScreen() {
   const [reminder, setReminder] = useState('60');
   const [notifications, setNotifications] = useState(true);
   const [faceId, setFaceId] = useState(false);
+  const [faceIdBusy, setFaceIdBusy] = useState(false);
+  const [biometricName, setBiometricName] = useState('Face ID');
   const [saving, setSaving] = useState(false);
 
   useFocusEffect(
@@ -36,8 +38,33 @@ export default function SettingsScreen() {
       setReminder(String(settings.defaultReminderMinutes));
       setNotifications(settings.notificationsEnabled);
       setFaceId(settings.faceIdEnabled);
+      void biometricLabel().then(setBiometricName);
     }, [settings]),
   );
+
+  const onFaceIdChange = async (next: boolean) => {
+    if (faceIdBusy) return;
+    setFaceId(next);
+    setFaceIdBusy(true);
+    try {
+      const result = await setFaceIdLock(next);
+      if (!result.ok) {
+        setFaceId(!next);
+        if (result.message) {
+          Alert.alert(`${biometricName} Kilidi`, result.message);
+        }
+        return;
+      }
+      if (next) {
+        Alert.alert(
+          `${biometricName} etkin`,
+          'Uygulama arka plana gidince kilitlenir. Tekrar açınca doğrulama istenir.',
+        );
+      }
+    } finally {
+      setFaceIdBusy(false);
+    }
+  };
 
   const save = async () => {
     if (!db) return;
@@ -51,13 +78,6 @@ export default function SettingsScreen() {
     } catch (e) {
       Alert.alert('Oran hatası', e instanceof Error ? e.message : 'Oranlar geçersiz.');
       return;
-    }
-    if (faceId) {
-      const ok = await isBiometricAvailable();
-      if (!ok) {
-        Alert.alert('Face ID', 'Bu cihazda Face ID / biyometri kullanılamıyor.');
-        return;
-      }
     }
     setSaving(true);
     try {
@@ -198,11 +218,20 @@ export default function SettingsScreen() {
 
       <Text style={styles.title}>Güvenlik</Text>
       <Card style={styles.card}>
-        <RowSwitch label="Face ID Kilidi" value={faceId} onChange={setFaceId} />
+        <RowSwitch
+          label={`${biometricName} Kilidi`}
+          value={faceId}
+          disabled={faceIdBusy}
+          onChange={(v) => void onFaceIdChange(v)}
+        />
         <Text style={styles.securityNote}>
+          {faceId
+            ? `${biometricName} açık. Uygulama arka plana gidince kilitlenir.`
+            : `${biometricName} kapalı. Açmak için anahtarı kullanın; doğrulama sonrası hemen kaydedilir.`}
+          {' '}
           {sqlCipherOk
             ? 'Veritabanı SQLCipher ile şifreli.'
-            : 'Face ID hazır. Veritabanı şifrelemesi (SQLCipher) için bir sonraki adımda development build gerekir. Gerçek danışan verisi eklemeden önce tamamlanmalıdır. Şifreleme anahtarı cihazda Secure Store’da saklanıyor.'}
+            : 'Veritabanı şifrelemesi (SQLCipher) için development build gerekir.'}
         </Text>
       </Card>
 
@@ -234,7 +263,7 @@ export default function SettingsScreen() {
 
       <Text style={styles.version}>Sürüm {Constants.expoConfig?.version ?? '1.0.0'}</Text>
       <Text style={styles.privacy}>
-        Gizlilik: NotesPlus verileri yalnızca bu iPhone’da saklanır. İnternete veri göndermez,
+        Gizlilik: FormaVita verileri yalnızca bu iPhone’da saklanır. İnternete veri göndermez,
         hesap veya bulut kullanmaz.
       </Text>
     </Screen>
@@ -245,16 +274,19 @@ function RowSwitch({
   label,
   value,
   onChange,
+  disabled = false,
 }: {
   label: string;
   value: boolean;
   onChange: (v: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <View style={styles.switchRow}>
       <Text style={styles.switchLabel}>{label}</Text>
       <Switch
         value={value}
+        disabled={disabled}
         onValueChange={onChange}
         trackColor={{ true: colors.brand.violet, false: colors.border }}
       />

@@ -38,7 +38,7 @@ export async function createBackupPayload(
 
 export async function exportBackup(db: SQLiteDatabase, appVersion: string): Promise<string> {
   const payload = await createBackupPayload(db, appVersion);
-  const fileName = `notesplus-yedek-${payload.exportedAt.slice(0, 10)}.json`;
+  const fileName = `formavita-yedek-${payload.exportedAt.slice(0, 10)}.json`;
   const path = `${FileSystem.cacheDirectory}${fileName}`;
   await FileSystem.writeAsStringAsync(path, JSON.stringify(payload, null, 2), {
     encoding: FileSystem.EncodingType.UTF8,
@@ -51,7 +51,7 @@ export async function exportBackup(db: SQLiteDatabase, appVersion: string): Prom
   await Sharing.shareAsync(path, {
     mimeType: 'application/json',
     UTI: 'public.json',
-    dialogTitle: 'NotesPlus yedeğini kaydet',
+    dialogTitle: 'FormaVita yedeğini kaydet',
   });
   return path;
 }
@@ -163,13 +163,14 @@ export async function restoreBackup(db: SQLiteDatabase, backup: BackupFile): Pro
     for (const row of backup.data.appointments) {
       await db.runAsync(
         `INSERT INTO appointments (
-          id, person_id, package_id, service_type, title, date, start_time,
+          id, person_id, package_id, group_id, service_type, title, date, start_time,
           duration_minutes, note, status, counts_against_quota,
           reminder_minutes_before, notification_id, created_at, updated_at, deleted_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         String(row.id),
         String(row.person_id),
         (row.package_id as string | null) ?? null,
+        (row.group_id as string | null) ?? null,
         String(row.service_type),
         String(row.title),
         String(row.date),

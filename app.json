@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "NotesPlus",
-    "slug": "notesplus-app",
+    "name": "FormaVita",
+    "slug": "formavita-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/brand/notesplus-app-icon-1024.png",
-    "scheme": "notesplus",
+    "icon": "./assets/formavita/brand/formavita-app-icon-1024.png",
+    "scheme": "formavita",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.notesplus.app",
+      "bundleIdentifier": "com.formavita.app",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Uygulamayı açmak için Face ID kullanılır.",
-        "UIBackgroundModes": ["remote-notification"]
+        "NSUserNotificationsUsageDescription": "Randevu hatırlatmaları için bildirim gönderilir."
       }
     },
     "plugins": [
@@ -23,16 +23,18 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/brand/notesplus-app-icon-1024.png",
+          "image": "./assets/formavita/brand/formavita-app-icon-1024.png",
           "resizeMode": "contain",
           "backgroundColor": "#F4F1FF"
         }
       ],
+      "./plugins/with-local-notifications-only",
       [
         "expo-notifications",
         {
-          "icon": "./assets/brand/notesplus-app-icon-1024.png",
-          "color": "#6C3CF0"
+          "icon": "./assets/formavita/brand/formavita-app-icon-1024.png",
+          "color": "#6C3CF0",
+          "enableBackgroundRemoteNotifications": false
         }
       ],
       [
