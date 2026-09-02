@@ -21,6 +21,7 @@ import {
   handleNotificationDelivered,
   syncAllAppointmentReminders,
 } from '@/src/services/notifications';
+import { wipeAllUserData as wipeAllUserDataService } from '@/src/services/wipeData';
 
 interface AppContextValue {
   db: SQLiteDatabase | null;
@@ -33,6 +34,7 @@ interface AppContextValue {
   setOnboardingTransitioning: (value: boolean) => void;
   completeOnboarding: () => Promise<void>;
   replayOnboarding: () => Promise<void>;
+  wipeAllUserData: () => Promise<void>;
   refreshSettings: () => Promise<void>;
   unlock: () => Promise<boolean>;
   setFaceIdLock: (enabled: boolean) => Promise<{ ok: boolean; message?: string }>;
@@ -124,6 +126,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await resetOnboarding(dbRef.current);
     setOnboardingDone(false);
   }, []);
+
+  const wipeAllUserData = useCallback(async () => {
+    if (!dbRef.current) return;
+    await wipeAllUserDataService(dbRef.current);
+    setSessionUnlocked(true);
+    setUnlocked(true);
+    const s = await getSettings(dbRef.current);
+    setSettings(s);
+    setReloadKey((k) => k + 1);
+    await refreshNotificationInbox();
+  }, [refreshNotificationInbox]);
 
   useEffect(() => {
     let cancelled = false;
@@ -239,6 +252,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setOnboardingTransitioning,
       completeOnboarding,
       replayOnboarding,
+      wipeAllUserData,
       refreshSettings,
       unlock,
       setFaceIdLock,
@@ -257,6 +271,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       onboardingTransitioning,
       completeOnboarding,
       replayOnboarding,
+      wipeAllUserData,
       refreshSettings,
       unlock,
       setFaceIdLock,

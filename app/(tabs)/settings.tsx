@@ -16,7 +16,7 @@ import { seedDemoData } from '@/src/services/demoData';
 import { biometricLabel, isSqlCipherConfigured } from '@/src/services/security';
 
 export default function SettingsScreen() {
-  const { db, settings, refreshSettings, bumpReload, replayOnboarding, setFaceIdLock } = useApp();
+  const { db, settings, refreshSettings, bumpReload, replayOnboarding, wipeAllUserData, setFaceIdLock } = useApp();
   const [dietUser, setDietUser] = useState('60');
   const [pilatesUser, setPilatesUser] = useState('40');
   const [dietDuration, setDietDuration] = useState('30');
@@ -27,6 +27,7 @@ export default function SettingsScreen() {
   const [faceIdBusy, setFaceIdBusy] = useState(false);
   const [biometricName, setBiometricName] = useState('Face ID');
   const [saving, setSaving] = useState(false);
+  const [wiping, setWiping] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -166,6 +167,56 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const onWipeAll = () => {
+    if (!db) return;
+    Alert.alert(
+      'Tüm verileri sil',
+      'Danışanlar, randevular, paketler, ödemeler, notlar ve bildirimler kalıcı olarak silinecek. Ayarlar varsayılana döner. Bu işlem geri alınamaz.',
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Tümünü sil',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Emin misiniz?',
+              'Silme işlemi hemen uygulanır. Devam etmek için onaylayın.',
+              [
+                { text: 'Vazgeç', style: 'cancel' },
+                {
+                  text: 'Evet, sil',
+                  style: 'destructive',
+                  onPress: async () => {
+                    setWiping(true);
+                    try {
+                      await wipeAllUserData();
+                      setDietUser('60');
+                      setPilatesUser('40');
+                      setDietDuration('30');
+                      setPilatesDuration('60');
+                      setReminder('60');
+                      setNotifications(true);
+                      setFaceId(false);
+                      bumpReload();
+                      Alert.alert('Tamam', 'Tüm veriler silindi.');
+                    } catch (e) {
+                      Alert.alert(
+                        'Hata',
+                        e instanceof Error ? e.message : 'Veriler silinemedi.',
+                      );
+                    } finally {
+                      setWiping(false);
+                    }
+                  },
+                },
+              ],
+            );
+          },
+        },
+      ],
+    );
+  };
+
   const sqlCipherOk = isSqlCipherConfigured();
 
   return (
@@ -241,6 +292,21 @@ export default function SettingsScreen() {
         <Button title="Yedekten Geri Yükle" variant="secondary" onPress={() => void onRestore()} />
         <Text style={styles.securityNote}>
           Yedek dosyası hassas kişisel bilgiler içerir. Paylaşırken dikkat edin.
+        </Text>
+      </Card>
+
+      <Text style={styles.title}>Veri Yönetimi</Text>
+      <Card style={styles.card}>
+        <Button
+          title="Tüm Verileri Sil"
+          variant="danger"
+          onPress={onWipeAll}
+          loading={wiping}
+          disabled={wiping}
+        />
+        <Text style={styles.securityNote}>
+          Danışan, randevu ve ödeme kayıtları silinir. Karşılama ekranı tekrar gösterilmez; yedek
+          almadan önce dışa aktarmanız önerilir.
         </Text>
       </Card>
 

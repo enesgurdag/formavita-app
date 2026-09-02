@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -25,10 +25,12 @@ export function AppGate() {
     setOnboardingTransitioning,
   } = useApp();
 
-  const [onboardingMounted, setOnboardingMounted] = useState(false);
   const overlayOpacity = useSharedValue(0);
   const mainOpacity = useSharedValue(0);
   const mainTranslateY = useSharedValue(0);
+
+  const showOnboardingOverlay =
+    ready && (!onboardingDone || onboardingTransitioning);
 
   useEffect(() => {
     if (!ready) return;
@@ -39,14 +41,12 @@ export function AppGate() {
     if (!ready || onboardingTransitioning) return;
 
     if (onboardingDone) {
-      setOnboardingMounted(false);
       overlayOpacity.value = 0;
       mainOpacity.value = 1;
       mainTranslateY.value = 0;
       return;
     }
 
-    setOnboardingMounted(true);
     overlayOpacity.value = 1;
     mainOpacity.value = 0;
     mainTranslateY.value = motion.appEnterSlidePx;
@@ -74,7 +74,6 @@ export function AppGate() {
     await new Promise((resolve) =>
       setTimeout(resolve, motion.appEnterMs + motion.appEnterDelayMs + 48),
     );
-    setOnboardingMounted(false);
     setOnboardingTransitioning(false);
   }, [
     completeOnboarding,
@@ -195,7 +194,7 @@ export function AppGate() {
         ) : null}
       </Animated.View>
 
-      {onboardingMounted ? (
+      {showOnboardingOverlay ? (
         <Animated.View style={[styles.overlay, overlayStyle]}>
           <OnboardingScreen onComplete={handleCompleteOnboarding} />
         </Animated.View>

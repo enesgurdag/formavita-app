@@ -40,23 +40,31 @@ async function readDbFlag(db: SQLiteDatabase): Promise<boolean> {
   }
 }
 
+/**
+ * SQLite birincil kaynak — yeni kurulumda DB=0 iken SecureStore’daki eski bayrak yok sayılır.
+ * (Expo Go / geliştirme ortamında SecureStore uygulama silinse bile kalabilir.)
+ */
 export async function hasCompletedOnboarding(db?: SQLiteDatabase | null): Promise<boolean> {
-  if (await readSecureFlag()) return true;
-  if (!db) return false;
-  const inDb = await readDbFlag(db);
-  if (inDb) {
-    await writeSecureFlag();
+  if (db) {
+    const inDb = await readDbFlag(db);
+    if (inDb) {
+      await writeSecureFlag();
+      return true;
+    }
+    await clearSecureFlag();
+    return false;
   }
-  return inDb;
+  return readSecureFlag();
 }
 
 export async function markOnboardingComplete(db?: SQLiteDatabase | null): Promise<void> {
+  if (db) {
+    await db.runAsync(
+      'UPDATE settings SET onboarding_completed = 1, updated_at = ? WHERE id = 1',
+      new Date().toISOString(),
+    );
+  }
   await writeSecureFlag();
-  if (!db) return;
-  await db.runAsync(
-    'UPDATE settings SET onboarding_completed = 1, updated_at = ? WHERE id = 1',
-    new Date().toISOString(),
-  );
 }
 
 /** Ayarlardan onboarding’i yeniden göstermek için */
