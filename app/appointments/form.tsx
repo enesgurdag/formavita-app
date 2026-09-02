@@ -11,6 +11,7 @@ import { DateField } from '@/src/components/ui/DateField';
 import { PersonCategoryPicker } from '@/src/components/ui/PersonCategoryPicker';
 import { useApp } from '@/src/context/AppContext';
 import { createId } from '@/src/utils/id';
+import { paramString } from '@/src/utils/routeParams';
 import { nowIso, toDateOnly, formatDateInputTR, parseDateInputTR } from '@/src/utils/date';
 import {
   findOverlappingAppointments,
@@ -66,13 +67,18 @@ type GroupMember = {
 
 export default function AppointmentFormScreen() {
   const { db, settings, bumpReload } = useApp();
-  const params = useLocalSearchParams<{
-    id?: string;
-    groupId?: string;
-    personId?: string;
-    date?: string;
-    new?: string;
+  const rawParams = useLocalSearchParams<{
+    id?: string | string[];
+    groupId?: string | string[];
+    personId?: string | string[];
+    date?: string | string[];
+    new?: string | string[];
   }>();
+  const appointmentId = paramString(rawParams.id);
+  const groupId = paramString(rawParams.groupId);
+  const personId = paramString(rawParams.personId);
+  const dateParam = paramString(rawParams.date);
+  const newSession = paramString(rawParams.new);
   const [people, setPeople] = useState<PersonListItem[]>([]);
   const [selectedPersonIds, setSelectedPersonIds] = useState<string[]>([]);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
@@ -80,14 +86,14 @@ export default function AppointmentFormScreen() {
   const [previousNotificationId, setPreviousNotificationId] = useState<string | null>(null);
   const [previousPackageId, setPreviousPackageId] = useState<string | null>(null);
 
-  const isGroupMode = Boolean(params.groupId) || groupMembers.length > 0;
+  const isGroupMode = Boolean(groupId) || groupMembers.length > 0;
   const isSingleEdit = Boolean(singleEditId) && !isGroupMode;
   const allowMultiSelect = !isSingleEdit;
 
   const blankForm = useCallback(
     (personType?: PersonType): FormValues => ({
       title: '',
-      date: formatDateInputTR(params.date ?? toDateOnly(new Date())),
+      date: formatDateInputTR(dateParam ?? toDateOnly(new Date())),
       startTime: '10:00',
       durationMinutes: String(defaultDurationMinutes(personType, settings)),
       note: '',
@@ -95,7 +101,7 @@ export default function AppointmentFormScreen() {
       countsAgainstQuota: true,
       reminderEnabled: true,
     }),
-    [params.date, settings],
+    [dateParam, settings],
   );
 
   const {
@@ -121,8 +127,8 @@ export default function AppointmentFormScreen() {
         if (cancelled) return;
         setPeople(list);
 
-        if (params.groupId) {
-          const group = await listAppointmentsByGroupId(db, params.groupId);
+        if (groupId) {
+          const group = await listAppointmentsByGroupId(db, groupId);
           if (group.length === 0 || cancelled) return;
           const lead = group[0]!;
           setGroupMembers(
@@ -148,8 +154,8 @@ export default function AppointmentFormScreen() {
           return;
         }
 
-        if (params.id) {
-          const appt = await getAppointmentById(db, params.id);
+        if (appointmentId) {
+          const appt = await getAppointmentById(db, appointmentId);
           if (!appt || cancelled) return;
 
           if (appt.groupId) {
@@ -182,8 +188,8 @@ export default function AppointmentFormScreen() {
         setGroupMembers([]);
         setPreviousNotificationId(null);
         setPreviousPackageId(null);
-        const preselected = params.personId
-          ? list.find((p) => p.id === params.personId)
+        const preselected = personId
+          ? list.find((p) => p.id === personId)
           : undefined;
         const form = blankForm(preselected?.personType);
         if (preselected) {
@@ -198,7 +204,7 @@ export default function AppointmentFormScreen() {
       return () => {
         cancelled = true;
       };
-    }, [db, params.id, params.groupId, params.new, params.date, params.personId, blankForm, reset]),
+    }, [db, appointmentId, groupId, newSession, dateParam, personId, blankForm, reset]),
   );
 
   useEffect(() => {
@@ -347,7 +353,7 @@ export default function AppointmentFormScreen() {
     const title =
       values.title.trim() || (isGroup ? 'Grup dersi' : selectedPersonIds.length === 1 ? 'Pilates dersi' : 'Randevu');
 
-    if (!isGroup && !ignoreOverlap && !params.groupId) {
+    if (!isGroup && !ignoreOverlap && !groupId) {
       const excludeId = singleEditId ?? undefined;
       const overlaps = await findOverlappingAppointments(
         db,
@@ -377,8 +383,7 @@ export default function AppointmentFormScreen() {
       : null;
 
     try {
-      if (params.groupId) {
-        const groupId = params.groupId;
+      if (groupId) {
         const existingMap = new Map(groupMembers.map((m) => [m.personId, m]));
 
         for (const member of groupMembers) {
@@ -556,7 +561,7 @@ export default function AppointmentFormScreen() {
 
   const onDelete = () => {
     if (!db) return;
-    const isGroup = Boolean(params.groupId);
+    const isGroup = Boolean(groupId);
     Alert.alert('Sil', isGroup ? 'Grup dersi arşivlensin mi?' : 'Randevu arşivlensin mi?', [
       { text: 'İptal', style: 'cancel' },
       {
@@ -564,11 +569,11 @@ export default function AppointmentFormScreen() {
         style: 'destructive',
         onPress: async () => {
           const ts = nowIso();
-          if (params.groupId) {
+          if (groupId) {
             for (const member of groupMembers) {
               await cancelAppointmentNotification(member.notificationId, db);
             }
-            await softDeleteAppointmentGroup(db, params.groupId, ts);
+            await softDeleteAppointmentGroup(db, groupId, ts);
           } else if (singleEditId) {
             await cancelAppointmentNotification(previousNotificationId, db);
             await softDeleteAppointment(db, singleEditId, ts);
@@ -714,7 +719,7 @@ export default function AppointmentFormScreen() {
         onPress={() => void handleSubmit((v) => persist(v))()}
         loading={isSubmitting}
       />
-      {params.groupId || singleEditId ? (
+      {groupId || singleEditId ? (
         <Button title="Sil" variant="danger" onPress={onDelete} style={{ marginTop: 8 }} />
       ) : null}
       <Button title="Vazgeç" variant="ghost" onPress={() => router.back()} style={{ marginTop: 8 }} />
