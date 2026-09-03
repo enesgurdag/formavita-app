@@ -19,6 +19,11 @@ import { migrations } from '../src/db/migrations';
 import { greetingForHour, toTitleCaseTR, formatDateTR, parseDateInputTR } from '../src/utils/date';
 import { remainingToSettle } from '../src/utils/packageSettle';
 import {
+  packageQuotaSessions,
+  perSessionFeeCents,
+  sessionCollectionAmountCents,
+} from '../src/utils/sessionFee';
+import {
   formatGroupParticipantNames,
   groupCalendarAppointments,
 } from '../src/utils/appointmentGroups';
@@ -389,6 +394,40 @@ describe('grup dersi', () => {
       },
     ]);
     expect(label).toContain('+1');
+  });
+});
+
+describe('seans başı tahsilat', () => {
+  test('paket ücreti seans sayısına bölünür', () => {
+    expect(perSessionFeeCents(800000, 8)).toBe(100000);
+    expect(perSessionFeeCents(100000, 3)).toBe(33333);
+    expect(perSessionFeeCents(0, 8)).toBe(0);
+  });
+
+  test('peşin ödenen pakette otomatik tahsilat yok', () => {
+    expect(sessionCollectionAmountCents(100000, 0)).toBe(0);
+  });
+
+  test('kısmi borçta seans ücreti veya kalan borçtan küçük olanı', () => {
+    expect(sessionCollectionAmountCents(100000, 250000)).toBe(100000);
+    expect(sessionCollectionAmountCents(100000, 40000)).toBe(40000);
+  });
+
+  test('diyet kontrol sayısı kota olarak kullanılır', () => {
+    expect(
+      packageQuotaSessions({
+        serviceType: 'diet',
+        totalSessions: null,
+        dietControlsTotal: 10,
+      }),
+    ).toBe(10);
+    expect(
+      packageQuotaSessions({
+        serviceType: 'pilates',
+        totalSessions: 8,
+        dietControlsTotal: null,
+      }),
+    ).toBe(8);
   });
 });
 

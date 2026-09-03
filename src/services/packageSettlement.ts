@@ -35,6 +35,7 @@ export async function settlePackageAsCompleted(
       paidAt: ts,
       note: 'Paket tamamlandı — ücret tahsil edildi kabul edildi',
       kind: 'settlement',
+      appointmentId: null,
       createdAt: ts,
       updatedAt: ts,
       deletedAt: null,

@@ -197,4 +197,12 @@ ALTER TABLE settings ADD COLUMN onboarding_completed INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE appointments ADD COLUMN is_free_consultation INTEGER NOT NULL DEFAULT 0;
 `,
   },
+  {
+    version: 8,
+    name: 'payment_session_appointment',
+    sql: `
+ALTER TABLE payments ADD COLUMN appointment_id TEXT REFERENCES appointments(id);
+CREATE INDEX IF NOT EXISTS idx_payments_appointment ON payments(appointment_id);
+`,
+  },
 ];

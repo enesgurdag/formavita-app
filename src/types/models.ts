@@ -46,12 +46,13 @@ export interface Package {
   deletedAt: string | null;
 }
 
-/** cash: nakit/havale tahsilat; credit_apply: önceki kapora/alacak aktarımı; settlement: paket tamamlandı düzeltmesi */
-export type PaymentKind = 'cash' | 'credit_apply' | 'settlement';
+/** cash: nakit/havale; credit_apply: kapora aktarımı; settlement: paket tamamlandı; session: tamamlanan seans ücreti */
+export type PaymentKind = 'cash' | 'credit_apply' | 'settlement' | 'session';
 
 export interface Payment {
   id: string;
   packageId: string;
+  appointmentId: string | null;
   amountCents: number;
   paidAt: string;
   note: string | null;

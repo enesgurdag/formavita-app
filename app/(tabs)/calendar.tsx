@@ -249,6 +249,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
   },
   chipActive: { backgroundColor: colors.brand.violet, borderColor: colors.brand.violet },

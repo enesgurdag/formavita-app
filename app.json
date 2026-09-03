@@ -25,7 +25,7 @@
         {
           "image": "./assets/formavita/brand/formavita-app-icon-1024.png",
           "resizeMode": "contain",
-          "backgroundColor": "#F4F1FF"
+          "backgroundColor": "#EEEBF7"
         }
       ],
       "./plugins/with-local-notifications-only",

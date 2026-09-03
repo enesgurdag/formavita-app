@@ -26,7 +26,7 @@ interface ButtonProps {
 
 const bg: Record<Variant, string> = {
   primary: colors.brand.violet,
-  secondary: colors.surfaceMuted,
+  secondary: colors.surface,
   ghost: 'transparent',
   danger: colors.danger.main,
   diet: colors.diet.main,
@@ -105,11 +105,12 @@ const styles = StyleSheet.create({
   ghost: {
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.borderStrong,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.72)',
   },
   secondary: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.surface,
   },
   label: {
     ...typography.button,

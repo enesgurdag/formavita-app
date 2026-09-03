@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { AppCanvas } from '@/src/components/ui/AppCanvas';
 import { useApp } from '@/src/context/AppContext';
 import { ErrorScreen } from '@/src/components/ui/LoadingScreen';
 import { Button } from '@/src/components/ui/Button';
@@ -22,7 +23,7 @@ const stackScreenOptions = {
   headerShadowVisible: false,
   headerBackTitle: 'Geri',
   headerBackButtonDisplayMode: 'default' as const,
-  contentStyle: { backgroundColor: colors.background },
+  contentStyle: { backgroundColor: 'transparent' },
   animation: 'slide_from_right' as const,
   ...(Platform.OS === 'ios'
     ? {
@@ -144,38 +145,40 @@ export function AppGate() {
   const showLock = onboardingDone && settings?.faceIdEnabled && !unlocked;
 
   return (
-    <View style={styles.root}>
-      <StatusBar style="dark" />
-      {showMainApp ? (
-        <View style={styles.main}>
-          {showLock ? (
-            <View style={styles.lock}>
-              <BrandLockup
-                size="lg"
-                wordmarkWidth={200}
-                caption="Devam etmek için Face ID veya cihaz şifresi kullanın."
-              />
-              <Button title="Kilidi aç" onPress={() => void unlock()} style={styles.lockBtn} />
-            </View>
-          ) : (
-            <AppStack />
-          )}
-        </View>
-      ) : null}
+    <AppCanvas>
+      <View style={styles.root}>
+        <StatusBar style="dark" />
+        {showMainApp ? (
+          <View style={styles.main}>
+            {showLock ? (
+              <View style={styles.lock}>
+                <BrandLockup
+                  size="lg"
+                  wordmarkWidth={200}
+                  caption="Devam etmek için Face ID veya cihaz şifresi kullanın."
+                />
+                <Button title="Kilidi aç" onPress={() => void unlock()} style={styles.lockBtn} />
+              </View>
+            ) : (
+              <AppStack />
+            )}
+          </View>
+        ) : null}
 
-      {showOnboardingOverlay ? (
-        <Animated.View style={[styles.overlay, overlayStyle]}>
-          <OnboardingScreen onComplete={handleCompleteOnboarding} />
-        </Animated.View>
-      ) : null}
-    </View>
+        {showOnboardingOverlay ? (
+          <Animated.View style={[styles.overlay, overlayStyle]}>
+            <OnboardingScreen onComplete={handleCompleteOnboarding} />
+          </Animated.View>
+        ) : null}
+      </View>
+    </AppCanvas>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   main: {
     flex: 1,
@@ -186,7 +189,6 @@ const styles = StyleSheet.create({
   },
   lock: {
     flex: 1,
-    backgroundColor: colors.brand.lilac,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xl,

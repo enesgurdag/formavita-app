@@ -6,6 +6,10 @@ import type {
   ServiceType,
 } from '@/src/types/models';
 import { syncPackageSessionCounts } from './packagesRepository';
+import {
+  syncAppointmentSessionPayment,
+} from '@/src/services/sessionPaymentService';
+import { softDeleteSessionPaymentForAppointment } from './paymentsRepository';
 
 type AppointmentRow = {
   id: string;
@@ -68,7 +72,7 @@ export async function listAppointmentsForDate(
     `SELECT a.*, p.first_name as person_first_name, p.last_name as person_last_name
      FROM appointments a
      JOIN people p ON p.id = a.person_id
-     WHERE a.deleted_at IS NULL AND a.date = ?${typeClause}
+     WHERE a.deleted_at IS NULL AND p.deleted_at IS NULL AND a.date = ?${typeClause}
      ORDER BY a.start_time ASC`,
     ...params,
   );
@@ -95,7 +99,7 @@ export async function listAppointmentsInRange(
     `SELECT a.*, p.first_name as person_first_name, p.last_name as person_last_name
      FROM appointments a
      JOIN people p ON p.id = a.person_id
-     WHERE a.deleted_at IS NULL AND a.date >= ? AND a.date <= ?${typeClause}
+     WHERE a.deleted_at IS NULL AND p.deleted_at IS NULL AND a.date >= ? AND a.date <= ?${typeClause}
      ORDER BY a.date ASC, a.start_time ASC`,
     ...params,
   );
@@ -127,7 +131,7 @@ export async function listAppointmentsByGroupId(
     `SELECT a.*, p.first_name as person_first_name, p.last_name as person_last_name
      FROM appointments a
      JOIN people p ON p.id = a.person_id
-     WHERE a.deleted_at IS NULL AND a.group_id = ?
+     WHERE a.deleted_at IS NULL AND p.deleted_at IS NULL AND a.group_id = ?
      ORDER BY p.last_name ASC, p.first_name ASC`,
     groupId,
   );
@@ -207,6 +211,7 @@ export async function insertAppointment(db: SQLiteDatabase, appt: Appointment): 
   if (appt.packageId) {
     await syncPackageSessionCounts(db, appt.packageId);
   }
+  await syncAppointmentSessionPayment(db, appt);
 }
 
 export async function updateAppointment(
@@ -260,6 +265,7 @@ export async function updateAppointment(
   for (const pid of packageIds) {
     await syncPackageSessionCounts(db, pid);
   }
+  await syncAppointmentSessionPayment(db, updated);
 }
 
 export async function softDeleteAppointment(
@@ -276,6 +282,9 @@ export async function softDeleteAppointment(
   );
   if (existing?.packageId) {
     await syncPackageSessionCounts(db, existing.packageId);
+  }
+  if (existing) {
+    await softDeleteSessionPaymentForAppointment(db, existing.id, deletedAt);
   }
 }
 
@@ -314,6 +323,7 @@ export async function listPlannedAppointmentsWithReminders(
      FROM appointments a
      JOIN people p ON p.id = a.person_id
      WHERE a.deleted_at IS NULL
+       AND p.deleted_at IS NULL
        AND a.status = 'planned'
        AND a.reminder_minutes_before IS NOT NULL
      ORDER BY a.date ASC, a.start_time ASC`,

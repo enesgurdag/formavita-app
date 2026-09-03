@@ -143,23 +143,6 @@ export async function restoreBackup(db: SQLiteDatabase, backup: BackupFile): Pro
       );
     }
 
-    for (const row of backup.data.payments) {
-      await db.runAsync(
-        `INSERT INTO payments (
-          id, package_id, amount_cents, paid_at, note, kind, created_at, updated_at, deleted_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        String(row.id),
-        String(row.package_id),
-        Number(row.amount_cents),
-        String(row.paid_at),
-        (row.note as string | null) ?? null,
-        String(row.kind ?? 'cash'),
-        String(row.created_at),
-        String(row.updated_at),
-        (row.deleted_at as string | null) ?? null,
-      );
-    }
-
     for (const row of backup.data.appointments) {
       await db.runAsync(
         `INSERT INTO appointments (
@@ -182,6 +165,25 @@ export async function restoreBackup(db: SQLiteDatabase, backup: BackupFile): Pro
         Number(row.counts_against_quota ?? 1),
         (row.reminder_minutes_before as number | null) ?? null,
         (row.notification_id as string | null) ?? null,
+        String(row.created_at),
+        String(row.updated_at),
+        (row.deleted_at as string | null) ?? null,
+      );
+    }
+
+    for (const row of backup.data.payments) {
+      await db.runAsync(
+        `INSERT INTO payments (
+          id, package_id, appointment_id, amount_cents, paid_at, note, kind,
+          created_at, updated_at, deleted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        String(row.id),
+        String(row.package_id),
+        (row.appointment_id as string | null) ?? null,
+        Number(row.amount_cents),
+        String(row.paid_at),
+        (row.note as string | null) ?? null,
+        String(row.kind ?? 'cash'),
         String(row.created_at),
         String(row.updated_at),
         (row.deleted_at as string | null) ?? null,

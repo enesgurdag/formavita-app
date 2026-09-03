@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { BrandIcon, BrandWordmark } from '@/src/components/brand/BrandMark';
+import { AppCanvas } from '@/src/components/ui/AppCanvas';
 import { Button } from '@/src/components/ui/Button';
 import { useApp } from '@/src/context/AppContext';
 import { colors, radius, spacing, typography } from '@/src/theme/tokens';
@@ -66,9 +67,8 @@ export default function OnboardingScreen({
   };
 
   return (
+    <AppCanvas>
     <View style={styles.root}>
-      <View style={styles.glowTop} />
-      <View style={styles.glowBottom} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.topBar}>
           <BrandWordmark width={132} />
@@ -121,31 +121,14 @@ export default function OnboardingScreen({
         </View>
       </SafeAreaView>
     </View>
+    </AppCanvas>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.brand.lilac,
-  },
-  glowTop: {
-    position: 'absolute',
-    top: -80,
-    right: -40,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: 'rgba(108, 60, 240, 0.12)',
-  },
-  glowBottom: {
-    position: 'absolute',
-    bottom: 40,
-    left: -60,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(255, 249, 237, 0.7)',
+    backgroundColor: 'transparent',
   },
   safe: {
     flex: 1,

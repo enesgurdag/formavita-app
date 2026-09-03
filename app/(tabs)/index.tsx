@@ -73,12 +73,12 @@ export default function HomeScreen() {
       <Text style={styles.greeting}>{greeting}</Text>
       <Text style={styles.sub}>Danışan, Üye Ve Programın Özeti</Text>
 
-      <Card style={[styles.serviceCard, { borderColor: colors.diet.border }]}>
+      <Card style={[styles.serviceCard, { borderColor: colors.diet.border, borderLeftColor: colors.diet.main }]}>
         <Text style={[styles.cardTitle, { color: colors.diet.main }]}>Diyet Danışanları</Text>
         <View style={styles.stats}>
-          <Stat label="Aktif" value={String(dietActive)} />
-          <Stat label="Bugün görüşme" value={String(dietToday)} />
-          <Stat label="Paketi bitmek üzere" value={String(dietExpiring)} />
+          <Stat label="Aktif" value={String(dietActive)} tone="diet" />
+          <Stat label="Bugün görüşme" value={String(dietToday)} tone="diet" />
+          <Stat label="Paketi bitmek üzere" value={String(dietExpiring)} tone="diet" />
         </View>
         <View style={styles.actions}>
           <Button
@@ -97,12 +97,12 @@ export default function HomeScreen() {
         </View>
       </Card>
 
-      <Card style={[styles.serviceCard, { borderColor: colors.pilates.border }]}>
+      <Card style={[styles.serviceCard, { borderColor: colors.pilates.border, borderLeftColor: colors.pilates.main }]}>
         <Text style={[styles.cardTitle, { color: colors.pilates.main }]}>Pilates Üyeleri</Text>
         <View style={styles.stats}>
-          <Stat label="Aktif" value={String(pilatesActive)} />
-          <Stat label="Bugün ders" value={String(pilatesToday)} />
-          <Stat label="Dersi az kalan" value={String(pilatesLow)} />
+          <Stat label="Aktif" value={String(pilatesActive)} tone="pilates" />
+          <Stat label="Bugün ders" value={String(pilatesToday)} tone="pilates" />
+          <Stat label="Dersi az kalan" value={String(pilatesLow)} tone="pilates" />
         </View>
         <View style={styles.actions}>
           <Button
@@ -141,9 +141,22 @@ export default function HomeScreen() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: 'diet' | 'pilates';
+}) {
   return (
-    <View style={styles.stat}>
+    <View
+      style={[
+        styles.stat,
+        { backgroundColor: tone === 'diet' ? colors.diet.soft : colors.pilates.soft },
+      ]}
+    >
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
@@ -179,7 +192,7 @@ const styles = StyleSheet.create({
   serviceCard: {
     marginBottom: spacing.md,
     borderWidth: 1,
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: colors.surface,
   },
   cardTitle: {
     ...typography.heading,
@@ -192,7 +205,6 @@ const styles = StyleSheet.create({
   },
   stat: {
     flex: 1,
-    backgroundColor: colors.surfaceMuted,
     borderRadius: radii.md,
     padding: spacing.sm,
   },

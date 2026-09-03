@@ -23,6 +23,16 @@ export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
   paid: 'Ödendi',
 };
 
+export const PAYMENT_KIND_LABEL: Record<
+  'cash' | 'credit_apply' | 'settlement' | 'session',
+  string
+> = {
+  cash: '',
+  credit_apply: 'Alacak aktarımı',
+  settlement: 'Tamamlanma',
+  session: 'Seans tahsilatı',
+};
+
 export const APPOINTMENT_STATUS_LABEL: Record<
   'planned' | 'completed' | 'cancelled' | 'no_show',
   string

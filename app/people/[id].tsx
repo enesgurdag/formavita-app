@@ -10,10 +10,11 @@ import { EmptyState } from '@/src/components/ui/EmptyState';
 import { LoadingScreen } from '@/src/components/ui/LoadingScreen';
 import { useApp } from '@/src/context/AppContext';
 import { colors, spacing, typography } from '@/src/theme/tokens';
-import { formatDateTR, formatDateTimeTR } from '@/src/utils/date';
+import { formatDateTR, formatDateTimeTR, nowIso } from '@/src/utils/date';
 import {
   APPOINTMENT_STATUS_LABEL,
   PACKAGE_STATUS_LABEL,
+  PAYMENT_KIND_LABEL,
   PAYMENT_STATUS_LABEL,
   PERSON_TYPE_LABEL,
 } from '@/src/utils/labels';
@@ -26,7 +27,7 @@ import { listAppointmentsForPerson } from '@/src/repositories/appointmentsReposi
 import { listNotesForPerson } from '@/src/repositories/notesRepository';
 import { listPaymentsForPackage } from '@/src/repositories/paymentsRepository';
 import { getPersonAvailableCreditCents } from '@/src/services/creditService';
-import { nowIso } from '@/src/utils/date';
+import { deletePersonCascade } from '@/src/services/personDelete';
 import { formatMoneyTRY } from '@/src/utils/money';
 import {
   packageCreditCents,
@@ -136,6 +137,31 @@ export default function PersonDetailScreen() {
     ]);
   };
 
+  const personNoun = person.personType === 'diet' ? 'Danışan' : 'Üye';
+  const onDeletePerson = () => {
+    Alert.alert(
+      `${personNoun} sil`,
+      `${person.firstName} ${person.lastName} silinsin mi? Randevular ve notlar kaldırılır. Tamamlanan seansların hakedişi Hakedişim sayfasında kalır. Bu işlem geri alınamaz.`,
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Sil',
+          style: 'destructive',
+          onPress: async () => {
+            if (!db) return;
+            try {
+              await deletePersonCascade(db, person.id);
+              bumpReload();
+              router.back();
+            } catch {
+              Alert.alert('Hata', `${personNoun} silinemedi.`);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <Screen>
       <View style={styles.header}>
@@ -227,13 +253,11 @@ export default function PersonDetailScreen() {
               {payments.map((p) => (
                 <Text key={p.id} style={styles.meta}>
                   {formatDateTimeTR(p.paidAt)} — {formatMoneyTRY(p.amountCents)}
-                  {p.kind === 'credit_apply'
-                    ? ' · Alacak aktarımı'
-                    : p.kind === 'settlement'
-                      ? ' · Tamamlanma'
-                      : p.note
-                        ? ` · ${p.note}`
-                        : ''}
+                  {PAYMENT_KIND_LABEL[p.kind]
+                    ? ` · ${PAYMENT_KIND_LABEL[p.kind]}`
+                    : p.note
+                      ? ` · ${p.note}`
+                      : ''}
                 </Text>
               ))}
             </View>
@@ -348,6 +372,14 @@ export default function PersonDetailScreen() {
           <MoneyText cents={pkg.collectedCents} size="caption" />
         </Card>
       ))}
+
+      <Button
+        title={`${personNoun} sil`}
+        variant="danger"
+        onPress={onDeletePerson}
+        style={styles.deleteBtn}
+        accessibilityLabel={`${personNoun} sil`}
+      />
     </Screen>
   );
 }
@@ -386,4 +418,8 @@ const styles = StyleSheet.create({
   payList: { marginTop: spacing.sm },
   listCard: { marginBottom: spacing.sm },
   noteBody: { ...typography.body, color: colors.text.primary, marginTop: 4 },
+  deleteBtn: {
+    marginTop: spacing.lg,
+    marginBottom: spacing.xl,
+  },
 });

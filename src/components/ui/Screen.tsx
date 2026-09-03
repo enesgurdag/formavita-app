@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FadeInView } from '@/src/components/ui/FadeInView';
 import { useApp } from '@/src/context/AppContext';
-import { colors, spacing } from '@/src/theme/tokens';
+import { spacing } from '@/src/theme/tokens';
 
 interface ScreenProps {
   children: React.ReactNode;
@@ -66,7 +66,7 @@ export function Screen({
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   flex: { flex: 1 },
   pad: {

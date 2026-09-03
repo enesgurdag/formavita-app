@@ -42,8 +42,9 @@ export async function applyPersonCreditToPackage(
     amountCents: applyCents,
     paidAt: ts,
     note: 'Alacak aktarımı (önceki kapora)',
-    kind: 'credit_apply',
-    createdAt: ts,
+      kind: 'credit_apply',
+      appointmentId: null,
+      createdAt: ts,
     updatedAt: ts,
     deletedAt: null,
   });

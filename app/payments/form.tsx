@@ -70,6 +70,7 @@ export default function PaymentFormScreen() {
         paidAt: ts,
         note: note?.trim() || null,
         kind: 'cash',
+        appointmentId: null,
         createdAt: ts,
         updatedAt: ts,
         deletedAt: null,

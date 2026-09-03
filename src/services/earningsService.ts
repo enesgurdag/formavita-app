@@ -10,6 +10,8 @@ type PkgMeta = {
   person_first_name: string;
   person_last_name: string;
   service_type: ServiceType;
+  status: string;
+  deleted_at: string | null;
   price_cents: number;
   collected_cents: number;
   user_share_bps: number;
@@ -71,13 +73,15 @@ export async function computeEarnings(
         pe.first_name as person_first_name,
         pe.last_name as person_last_name,
         pk.service_type,
+        pk.status,
+        pk.deleted_at,
         pk.price_cents,
         pk.collected_cents,
         pk.user_share_bps,
         pk.clinic_share_bps
       FROM packages pk
       JOIN people pe ON pe.id = pk.person_id
-      WHERE pk.id = ? AND pk.deleted_at IS NULL`,
+      WHERE pk.id = ?`,
       packageId,
     );
     if (!pkg) continue;
@@ -107,7 +111,12 @@ export async function computeEarnings(
     if (pkg.service_type === 'diet') dietUserShareCents += split.userShareCents;
     else pilatesUserShareCents += split.userShareCents;
 
-    remainingReceivableCents += Math.max(0, pkg.price_cents - Math.min(pkg.collected_cents, pkg.price_cents));
+    const openPackage =
+      !pkg.deleted_at && (pkg.status === 'active' || pkg.status === 'completed');
+    const remaining = openPackage
+      ? Math.max(0, pkg.price_cents - Math.min(pkg.collected_cents, pkg.price_cents))
+      : 0;
+    remainingReceivableCents += remaining;
 
     rows.push({
       packageId: pkg.package_id,
@@ -118,7 +127,7 @@ export async function computeEarnings(
       collectedCents: split.collectedCents,
       userShareCents: split.userShareCents,
       clinicShareCents: split.clinicShareCents,
-      remainingReceivableCents: Math.max(0, pkg.price_cents - Math.min(pkg.collected_cents, pkg.price_cents)),
+      remainingReceivableCents: remaining,
       paidAt: lastPaidAt,
     });
   }

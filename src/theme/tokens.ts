@@ -1,5 +1,6 @@
 /**
- * FormaVita marka rehberi — Midnight Indigo, Violet, Warm Paper, Soft Lilac
+ * FormaVita — porselen zemin, indigo sis, violet vurgu.
+ * Logo (midnight + violet + beyaz çiçek) ile uyumlu; krem/lila çatışması yok.
  */
 import { Platform, TextStyle } from 'react-native';
 
@@ -7,34 +8,40 @@ export const colors = {
   brand: {
     midnight: '#11104A',
     violet: '#6C3CF0',
-    paper: '#FFF9ED',
-    lilac: '#F4F1FF',
+    /** Logo çiçeği / kart yüzeyi */
+    paper: '#FFFFFF',
+    /** İnce marka sis (chip, banner) */
+    lilac: '#EDE9FA',
   },
-  /** Soft Lilac — uygulama zemini */
-  background: '#F4F1FF',
-  /** Warm Paper / beyaz yüzeyler */
+  /** Porselen canvas — soğuk, temiz, logo indigo’suna yaslanır */
+  background: '#EEEBF7',
+  /** Üst atmosfer (Screen wash) */
+  wash: 'rgba(108, 60, 240, 0.10)',
+  washDeep: 'rgba(17, 16, 74, 0.07)',
+  /** Kart / tab / input */
   surface: '#FFFFFF',
-  surfaceMuted: '#EDE8FA',
-  surfaceElevated: '#FFF9ED',
-  border: '#E3DDF2',
-  borderStrong: '#CDC4E4',
+  /** Stat, segmented, ikincil dolgu */
+  surfaceMuted: '#EEEBF8',
+  surfaceElevated: '#FFFFFF',
+  border: '#E4DFF3',
+  borderStrong: '#D0C9E6',
   text: {
     primary: '#11104A',
-    secondary: '#5A5674',
-    muted: '#8E8AA3',
-    inverse: '#FFF9ED',
+    secondary: '#4A4768',
+    muted: '#7A7693',
+    inverse: '#FFFFFF',
     danger: '#B42318',
     success: '#0F6B4D',
   },
   diet: {
-    main: '#0D9488',
-    soft: '#E7F7F4',
-    border: '#B5E2DB',
+    main: '#0B7C74',
+    soft: '#E6F5F3',
+    border: '#BFE3DE',
   },
   pilates: {
     main: '#6C3CF0',
-    soft: '#F1E9FF',
-    border: '#D4C2F7',
+    soft: '#EFE8FF',
+    border: '#D4C4F8',
   },
   warning: {
     main: '#B45309',
@@ -44,7 +51,7 @@ export const colors = {
     main: '#B42318',
     soft: '#FEE4E2',
   },
-  overlay: 'rgba(17, 16, 74, 0.45)',
+  overlay: 'rgba(17, 16, 74, 0.48)',
 } as const;
 
 export const spacing = {
@@ -145,16 +152,16 @@ export const typography = {
 export const shadows = {
   card: {
     shadowColor: '#11104A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.07,
+    shadowRadius: 20,
+    elevation: 3,
   },
   soft: {
     shadowColor: '#11104A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowRadius: 10,
     elevation: 1,
   },
 } as const;
