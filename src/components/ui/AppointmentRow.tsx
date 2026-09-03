@@ -7,6 +7,8 @@ import { colors, radius, shadows, spacing, typography } from '@/src/theme/tokens
 import { appointmentEndTime } from '@/src/utils/date';
 import { APPOINTMENT_STATUS_LABEL, PERSON_TYPE_LABEL } from '@/src/utils/labels';
 
+const FREE_CONSULTATION_LABEL = 'Ücretsiz ön görüşme';
+
 interface AppointmentRowProps {
   appointment: AppointmentWithPerson;
   onPress: () => void;
@@ -38,6 +40,9 @@ export function AppointmentRow({ appointment, onPress }: AppointmentRowProps) {
           {appointment.personFirstName} {appointment.personLastName}
         </Text>
         <View style={styles.statusWrap}>
+          {appointment.isFreeConsultation ? (
+            <Badge label={FREE_CONSULTATION_LABEL} tone="diet" />
+          ) : null}
           <Badge
             label={APPOINTMENT_STATUS_LABEL[appointment.status]}
             tone={
@@ -93,5 +98,8 @@ const styles = StyleSheet.create({
   },
   statusWrap: {
     marginTop: 4,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
 });

@@ -164,9 +164,9 @@ export async function restoreBackup(db: SQLiteDatabase, backup: BackupFile): Pro
       await db.runAsync(
         `INSERT INTO appointments (
           id, person_id, package_id, group_id, service_type, title, date, start_time,
-          duration_minutes, note, status, counts_against_quota,
+          duration_minutes, note, status, is_free_consultation, counts_against_quota,
           reminder_minutes_before, notification_id, created_at, updated_at, deleted_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         String(row.id),
         String(row.person_id),
         (row.package_id as string | null) ?? null,
@@ -178,6 +178,7 @@ export async function restoreBackup(db: SQLiteDatabase, backup: BackupFile): Pro
         Number(row.duration_minutes),
         (row.note as string | null) ?? null,
         String(row.status),
+        Number(row.is_free_consultation ?? 0),
         Number(row.counts_against_quota ?? 1),
         (row.reminder_minutes_before as number | null) ?? null,
         (row.notification_id as string | null) ?? null,

@@ -20,6 +20,7 @@ type AppointmentRow = {
   note: string | null;
   status: AppointmentStatus;
   counts_against_quota: number;
+  is_free_consultation: number;
   reminder_minutes_before: number | null;
   notification_id: string | null;
   created_at: string;
@@ -42,6 +43,7 @@ function mapAppointment(row: AppointmentRow): Appointment {
     durationMinutes: row.duration_minutes,
     note: row.note,
     status: row.status,
+    isFreeConsultation: row.is_free_consultation === 1,
     countsAgainstQuota: row.counts_against_quota === 1,
     reminderMinutesBefore: row.reminder_minutes_before,
     notificationId: row.notification_id,
@@ -181,9 +183,9 @@ export async function insertAppointment(db: SQLiteDatabase, appt: Appointment): 
   await db.runAsync(
     `INSERT INTO appointments (
       id, person_id, package_id, group_id, service_type, title, date, start_time,
-      duration_minutes, note, status, counts_against_quota,
+      duration_minutes, note, status, is_free_consultation, counts_against_quota,
       reminder_minutes_before, notification_id, created_at, updated_at, deleted_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
     appt.id,
     appt.personId,
     appt.packageId,
@@ -195,6 +197,7 @@ export async function insertAppointment(db: SQLiteDatabase, appt: Appointment): 
     appt.durationMinutes,
     appt.note,
     appt.status,
+    appt.isFreeConsultation ? 1 : 0,
     appt.countsAgainstQuota ? 1 : 0,
     appt.reminderMinutesBefore,
     appt.notificationId,
@@ -238,6 +241,10 @@ export async function updateAppointment(
   if ('countsAgainstQuota' in patch && patch.countsAgainstQuota !== undefined) {
     fields.push('counts_against_quota = ?');
     values.push(patch.countsAgainstQuota ? 1 : 0);
+  }
+  if ('isFreeConsultation' in patch && patch.isFreeConsultation !== undefined) {
+    fields.push('is_free_consultation = ?');
+    values.push(patch.isFreeConsultation ? 1 : 0);
   }
   if (fields.length === 0) return;
   values.push(id);

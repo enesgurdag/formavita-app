@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, StyleSheet, Switch, Text, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -43,6 +43,12 @@ function defaultDurationMinutes(
     return settings?.defaultDietAppointmentMinutes ?? 30;
   }
   return settings?.defaultPilatesAppointmentMinutes ?? 60;
+}
+
+const FREE_CONSULTATION_TITLE = 'Ücretsiz ön görüşme';
+
+function isDietWithoutActivePackage(person: PersonListItem | undefined): boolean {
+  return person?.personType === 'diet' && !person.activePackageName;
 }
 
 const schema = z.object({
@@ -117,6 +123,11 @@ export default function AppointmentFormScreen() {
   });
 
   const status = watch('status');
+  const selectedPerson =
+    !isGroupMode && selectedPersonIds.length === 1
+      ? people.find((p) => p.id === selectedPersonIds[0])
+      : undefined;
+  const isAutoFreeConsultation = isDietWithoutActivePackage(selectedPerson);
 
   useFocusEffect(
     useCallback(() => {
@@ -194,8 +205,14 @@ export default function AppointmentFormScreen() {
         const form = blankForm(preselected?.personType);
         if (preselected) {
           setSelectedPersonIds([preselected.id]);
-          form.title =
-            preselected.personType === 'diet' ? 'Kontrol görüşmesi' : 'Pilates dersi';
+          if (isDietWithoutActivePackage(preselected)) {
+            form.title = FREE_CONSULTATION_TITLE;
+            form.countsAgainstQuota = false;
+          } else if (preselected.personType === 'diet') {
+            form.title = 'Kontrol görüşmesi';
+          } else {
+            form.title = 'Pilates dersi';
+          }
         } else {
           setSelectedPersonIds([]);
         }
@@ -206,6 +223,19 @@ export default function AppointmentFormScreen() {
       };
     }, [db, appointmentId, groupId, newSession, dateParam, personId, blankForm, reset]),
   );
+
+  useEffect(() => {
+    if (isSingleEdit || isGroupMode || selectedPersonIds.length !== 1) return;
+    const person = people.find((p) => p.id === selectedPersonIds[0]);
+    if (!person || person.personType !== 'diet') return;
+    if (!person.activePackageName) {
+      setValue('title', FREE_CONSULTATION_TITLE);
+      setValue('countsAgainstQuota', false);
+    } else if (watch('title') === FREE_CONSULTATION_TITLE) {
+      setValue('title', 'Kontrol görüşmesi');
+      setValue('countsAgainstQuota', true);
+    }
+  }, [selectedPersonIds, people, isSingleEdit, isGroupMode, setValue, watch]);
 
   useEffect(() => {
     if (isSingleEdit || isGroupMode || selectedPersonIds.length !== 1) return;
@@ -235,7 +265,10 @@ export default function AppointmentFormScreen() {
       }
       setSelectedPersonIds([person.id]);
       setValue('durationMinutes', String(defaultDurationMinutes(person.personType, settings)));
-      if (!watch('title')) {
+      if (person.personType === 'diet' && !person.activePackageName) {
+        setValue('title', FREE_CONSULTATION_TITLE);
+        setValue('countsAgainstQuota', false);
+      } else if (!watch('title')) {
         setValue('title', person.personType === 'diet' ? 'Kontrol görüşmesi' : 'Pilates dersi');
       }
       return;
@@ -244,7 +277,13 @@ export default function AppointmentFormScreen() {
     if (person.personType === 'diet') {
       setSelectedPersonIds([person.id]);
       setValue('durationMinutes', String(defaultDurationMinutes('diet', settings)));
-      setValue('title', 'Kontrol görüşmesi');
+      if (!person.activePackageName) {
+        setValue('title', FREE_CONSULTATION_TITLE);
+        setValue('countsAgainstQuota', false);
+      } else {
+        setValue('title', 'Kontrol görüşmesi');
+        setValue('countsAgainstQuota', true);
+      }
       return;
     }
 
@@ -277,6 +316,7 @@ export default function AppointmentFormScreen() {
     serviceType: PersonType,
     packageId: string | null,
     prevNotificationId: string | null,
+    isFreeConsult: boolean,
   ) => {
     if (!db || !settings) return null;
     const reminderMinutes = values.reminderEnabled
@@ -298,7 +338,8 @@ export default function AppointmentFormScreen() {
         durationMinutes: duration,
         note: null,
         status: values.status,
-        countsAgainstQuota: values.countsAgainstQuota,
+        isFreeConsultation: isFreeConsult,
+        countsAgainstQuota: isFreeConsult ? false : values.countsAgainstQuota,
         groupId: null,
         notificationId: null,
         createdAt: ts,
@@ -350,8 +391,29 @@ export default function AppointmentFormScreen() {
     }
 
     const isGroup = selectedPersonIds.length > 1;
+    let isFreeConsult = false;
+    if (!isGroup && selectedPersonIds.length === 1) {
+      const person = await getPersonById(db, selectedPersonIds[0]!);
+      if (person?.personType === 'diet') {
+        const activePkg = await getActivePackage(db, person.id);
+        isFreeConsult = !activePkg;
+      }
+    }
+    const selectedPersonForTitle =
+      selectedPersonIds.length === 1
+        ? people.find((p) => p.id === selectedPersonIds[0])
+        : undefined;
     const title =
-      values.title.trim() || (isGroup ? 'Grup dersi' : selectedPersonIds.length === 1 ? 'Pilates dersi' : 'Randevu');
+      values.title.trim() ||
+      (isFreeConsult
+        ? FREE_CONSULTATION_TITLE
+        : isGroup
+          ? 'Grup dersi'
+          : selectedPersonForTitle?.personType === 'diet'
+            ? 'Kontrol görüşmesi'
+            : selectedPersonForTitle?.personType === 'pilates'
+              ? 'Pilates dersi'
+              : 'Randevu');
 
     if (!isGroup && !ignoreOverlap && !groupId) {
       const excludeId = singleEditId ?? undefined;
@@ -438,6 +500,7 @@ export default function AppointmentFormScreen() {
               durationMinutes: duration,
               note: values.note?.trim() || null,
               status: values.status,
+              isFreeConsultation: false,
               countsAgainstQuota: values.countsAgainstQuota,
               reminderMinutesBefore: reminderMinutes,
               notificationId: null,
@@ -466,7 +529,8 @@ export default function AppointmentFormScreen() {
           );
           return;
         }
-        const packageId = activePkg?.id ?? previousPackageId ?? null;
+        const isFreeConsult = person.personType === 'diet' && !activePkg;
+        const packageId = isFreeConsult ? null : (activePkg?.id ?? previousPackageId ?? null);
         await updateAppointment(
           db,
           singleEditId,
@@ -480,11 +544,12 @@ export default function AppointmentFormScreen() {
             durationMinutes: duration,
             note: values.note?.trim() || null,
             status: values.status as AppointmentStatus,
-            countsAgainstQuota: values.countsAgainstQuota,
+            isFreeConsultation: isFreeConsult,
+            countsAgainstQuota: isFreeConsult ? false : values.countsAgainstQuota,
             reminderMinutesBefore: reminderMinutes,
             updatedAt: ts,
           },
-          previousPackageId,
+          isFreeConsult ? null : previousPackageId,
         );
         await scheduleReminder(
           singleEditId,
@@ -496,6 +561,7 @@ export default function AppointmentFormScreen() {
           person.personType,
           packageId,
           previousNotificationId,
+          isFreeConsult,
         );
       } else {
         const groupId = isGroup ? await createId() : null;
@@ -510,11 +576,12 @@ export default function AppointmentFormScreen() {
             );
             return;
           }
+          const personIsFreeConsult = person.personType === 'diet' && !activePkg;
           const appointmentId = await createId();
           await insertAppointment(db, {
             id: appointmentId,
             personId,
-            packageId: activePkg?.id ?? null,
+            packageId: personIsFreeConsult ? null : (activePkg?.id ?? null),
             groupId,
             serviceType: person.personType,
             title,
@@ -523,7 +590,8 @@ export default function AppointmentFormScreen() {
             durationMinutes: duration,
             note: values.note?.trim() || null,
             status: values.status,
-            countsAgainstQuota: values.countsAgainstQuota,
+            isFreeConsultation: personIsFreeConsult,
+            countsAgainstQuota: personIsFreeConsult ? false : values.countsAgainstQuota,
             reminderMinutesBefore: reminderMinutes,
             notificationId: null,
             createdAt: ts,
@@ -539,8 +607,9 @@ export default function AppointmentFormScreen() {
               duration,
               `${person.firstName} ${person.lastName}`,
               person.personType,
-              activePkg?.id ?? null,
+              personIsFreeConsult ? null : (activePkg?.id ?? null),
               null,
+              personIsFreeConsult,
             );
           }
         }
@@ -586,16 +655,7 @@ export default function AppointmentFormScreen() {
   };
 
   return (
-    <Screen scroll={false} padded={false}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.formPad}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
+    <Screen fadeIn={false}>
       <Text style={styles.label}>
         {isGroupMode ? 'Grup dersi üyeleri' : 'Kişi seçimi'}
       </Text>
@@ -627,6 +687,15 @@ export default function AppointmentFormScreen() {
         <Text style={styles.groupHint}>
           {selectedPersonIds.length} kişilik grup dersi — takvimde tek satır olarak görünür.
         </Text>
+      ) : null}
+
+      {isAutoFreeConsultation ? (
+        <View style={styles.freeConsultBanner}>
+          <Text style={styles.freeConsultTitle}>Ücretsiz ön görüşme</Text>
+          <Text style={styles.freeConsultHint}>
+            Aktif paketi olmayan diyet danışanı için otomatik uygulanır. Paket ve hakedişe bağlanmaz.
+          </Text>
+        </View>
       ) : null}
 
       <Controller
@@ -690,7 +759,7 @@ export default function AppointmentFormScreen() {
         ))}
       </View>
 
-      {status === 'no_show' ? (
+      {status === 'no_show' && !isAutoFreeConsultation ? (
         <Controller
           control={control}
           name="countsAgainstQuota"
@@ -723,18 +792,11 @@ export default function AppointmentFormScreen() {
         <Button title="Sil" variant="danger" onPress={onDelete} style={{ marginTop: 8 }} />
       ) : null}
       <Button title="Vazgeç" variant="ghost" onPress={() => router.back()} style={{ marginTop: 8 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  formPad: {
-    padding: spacing.md,
-    paddingBottom: spacing.xxl,
-  },
   label: { ...typography.captionMedium, color: colors.text.secondary, marginBottom: 4 },
   singleEditPerson: {
     backgroundColor: colors.surfaceMuted,
@@ -759,4 +821,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   switchLabel: { ...typography.body, color: colors.text.primary },
+  freeConsultBanner: {
+    backgroundColor: colors.diet.soft,
+    borderRadius: 10,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  freeConsultTitle: { ...typography.bodyMedium, color: colors.diet.main },
+  freeConsultHint: {
+    ...typography.caption,
+    color: colors.text.secondary,
+    marginTop: 4,
+  },
 });

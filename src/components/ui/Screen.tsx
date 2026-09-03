@@ -18,13 +18,26 @@ interface ScreenProps {
   scroll?: boolean;
   style?: StyleProp<ViewStyle>;
   padded?: boolean;
+  /** Modal ekranlarda giriş animasyonunu kapatır */
+  fadeIn?: boolean;
 }
 
-export function Screen({ children, scroll = true, style, padded = true }: ScreenProps) {
+export function Screen({
+  children,
+  scroll = true,
+  style,
+  padded = true,
+  fadeIn = true,
+}: ScreenProps) {
   const { onboardingTransitioning } = useApp();
-  // AppGate zaten giriş animasyonunu yapıyor; geçiş bitince FadeInView eklenmesin.
   const skipFadeInRef = useRef(onboardingTransitioning);
-  const contentBody = skipFadeInRef.current ? children : <FadeInView>{children}</FadeInView>;
+  const fadeWrapStyle = scroll ? undefined : styles.flex;
+  const contentBody =
+    fadeIn && !skipFadeInRef.current ? (
+      <FadeInView style={fadeWrapStyle}>{children}</FadeInView>
+    ) : (
+      children
+    );
 
   const content = scroll ? (
     <KeyboardAvoidingView

@@ -52,8 +52,8 @@ async function seedDefaultSettings(db: SQLite.SQLiteDatabase): Promise<void> {
       pilates_user_share_bps, pilates_clinic_share_bps,
       default_appointment_minutes, default_diet_appointment_minutes,
       default_pilates_appointment_minutes, notifications_enabled,
-      default_reminder_minutes, face_id_enabled, updated_at
-    ) VALUES (1, 6000, 4000, 4000, 6000, 60, 30, 60, 1, 60, 0, ?)`,
+      default_reminder_minutes, face_id_enabled, onboarding_completed, updated_at
+    ) VALUES (1, 6000, 4000, 4000, 6000, 60, 30, 60, 1, 60, 0, 0, ?)`,
     new Date().toISOString(),
   );
 }

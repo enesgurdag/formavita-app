@@ -185,9 +185,16 @@ CREATE INDEX IF NOT EXISTS idx_notification_inbox_unread ON notification_inbox(d
   },
   {
     version: 6,
-    name: 'onboarding_completed_flag',
+    name: 'settings_onboarding_completed',
     sql: `
 ALTER TABLE settings ADD COLUMN onboarding_completed INTEGER NOT NULL DEFAULT 0;
+`,
+  },
+  {
+    version: 7,
+    name: 'appointment_free_consultation',
+    sql: `
+ALTER TABLE appointments ADD COLUMN is_free_consultation INTEGER NOT NULL DEFAULT 0;
 `,
   },
 ];

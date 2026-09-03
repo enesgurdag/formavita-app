@@ -74,6 +74,8 @@ export interface Appointment {
   durationMinutes: number;
   note: string | null;
   status: AppointmentStatus;
+  /** Diyet — paket/hakediş dışı ücretsiz ön görüşme */
+  isFreeConsultation: boolean;
   countsAgainstQuota: boolean;
   reminderMinutesBefore: number | null;
   notificationId: string | null;
