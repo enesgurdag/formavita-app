@@ -1,37 +1,33 @@
 ---
-description: FormaVita semver — her geliştirmede sürüm artır; kurulumda istenen sürümü kullan
+description: FormaVita semver — sürüm yalnızca GitHub push anında artar; lokal çalışmada bump yok
 alwaysApply: true
 ---
 
 # Uygulama sürüm yönetimi
 
-## Güncel durum
+## Net kural
 
-- Mevcut basım: **1.0.0** (`app.json` + `package.json` aynı olmalı)
-- Git etiketi: `v1.0.0` = bu basımın sabit noktası
+- **Lokal geliştirmede sürüm güncellenmez.** Feature, bugfix, UI vb. commit’lerde `app.json` / `package.json` sürümüne dokunma.
+- **Sürüm yalnızca GitHub’a push yapılırken** artırılır (patch: `1.0.0` → `1.0.1` → …). Büyük özellik / kırıcı değişiklik için minor veya major.
 
-## Her anlamlı geliştirmede
+## Push akışı (kullanıcı push istediğinde)
 
-1. Patch artır (ör. `1.0.0` → `1.0.1` → `1.0.2`).
-2. Büyük özellik / kırıcı değişiklik: minor veya major (`1.1.0`, `2.0.0`).
-3. Şunları **birlikte** güncelle:
-   - `app.json` → `expo.version`
-   - `package.json` → `version`
-4. İlgili commit mesajında sürümü belirt (ör. `chore: bump version to 1.0.1`).
-5. Kullanıcı commit isterse, mümkünse aynı commit’te veya hemen ardından `git tag vX.Y.Z` öner / uygula.
+1. Mevcut sürümü oku (`app.json` `expo.version` + `package.json` `version`).
+2. Yeni sürümü belirle (varsayılan: patch +0.0.1).
+3. `app.json` ve `package.json` sürümlerini **birlikte** güncelle.
+4. Sürüm bump’ını commit’le (ör. `chore: bump version to 1.0.1`).
+5. `main` (veya ilgili branch) push et.
+6. `git tag -a vX.Y.Z -m "FormaVita X.Y.Z"` oluştur ve `git push origin vX.Y.Z` ile etiketi de gönder.
 
 ## “X.Y.Z sürümünü kur” / telefona kur
 
-Kullanıcı belirli bir sürüm isterse:
-
 1. `git checkout vX.Y.Z` (veya o sürüme ait commit).
-2. Temiz Metro / Expo Go ile iOS simülatör veya cihaz kurulumunu başlat.
-3. Ayarlar ekranındaki “Sürüm X.Y.Z” ile doğrula (`Constants.expoConfig.version`).
-
-Etiket yoksa: `app.json` / `package.json` sürümüne göre ilgili commit’i bul; bulamazsan kullanıcıya söyle.
+2. Temiz Metro / Expo ile simülatör veya cihaz aç.
+3. Ayarlar’daki “Sürüm X.Y.Z” ile doğrula.
 
 ## Yapma
 
-- Geliştirme bitince sürümü unutma.
+- Her lokal commit veya her feature bitişinde sürüm artırma.
+- Push olmadan sürüm bump.
 - Yalnızca `package.json` veya yalnızca `app.json` güncelleme.
-- Çalışmayan / yarım değişiklik için sürüm artırma (kullanıcı özellikle istemedikçe).
+- Push isterken sürüm bump’ını atlama (kullanıcı özellikle “sürüm değiştirme” demedikçe).
