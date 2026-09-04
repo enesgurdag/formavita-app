@@ -1,0 +1,37 @@
+---
+description: FormaVita semver — her geliştirmede sürüm artır; kurulumda istenen sürümü kullan
+alwaysApply: true
+---
+
+# Uygulama sürüm yönetimi
+
+## Güncel durum
+
+- Mevcut basım: **1.0.0** (`app.json` + `package.json` aynı olmalı)
+- Git etiketi: `v1.0.0` = bu basımın sabit noktası
+
+## Her anlamlı geliştirmede
+
+1. Patch artır (ör. `1.0.0` → `1.0.1` → `1.0.2`).
+2. Büyük özellik / kırıcı değişiklik: minor veya major (`1.1.0`, `2.0.0`).
+3. Şunları **birlikte** güncelle:
+   - `app.json` → `expo.version`
+   - `package.json` → `version`
+4. İlgili commit mesajında sürümü belirt (ör. `chore: bump version to 1.0.1`).
+5. Kullanıcı commit isterse, mümkünse aynı commit’te veya hemen ardından `git tag vX.Y.Z` öner / uygula.
+
+## “X.Y.Z sürümünü kur” / telefona kur
+
+Kullanıcı belirli bir sürüm isterse:
+
+1. `git checkout vX.Y.Z` (veya o sürüme ait commit).
+2. Temiz Metro / Expo Go ile iOS simülatör veya cihaz kurulumunu başlat.
+3. Ayarlar ekranındaki “Sürüm X.Y.Z” ile doğrula (`Constants.expoConfig.version`).
+
+Etiket yoksa: `app.json` / `package.json` sürümüne göre ilgili commit’i bul; bulamazsan kullanıcıya söyle.
+
+## Yapma
+
+- Geliştirme bitince sürümü unutma.
+- Yalnızca `package.json` veya yalnızca `app.json` güncelleme.
+- Çalışmayan / yarım değişiklik için sürüm artırma (kullanıcı özellikle istemedikçe).
